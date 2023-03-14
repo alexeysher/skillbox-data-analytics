@@ -178,7 +178,8 @@ def show_metric_table(metrics: pd.DataFrame):
 
 config.dataFrameSerialization = "arrow"
 
-st.set_page_config(layout='wide')
+st.set_page_config(page_title='Исследование результатов опроса клиентов компании МегаФон',
+                   page_icon='chart', layout='wide')
 # hide_menu_button()
 remove_blank_space()
 
