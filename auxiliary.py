@@ -22,7 +22,7 @@ class MegafonColors:
 
 def wrap_text(text, length=50):
     '''
-    Функция разбивает текст на строки заданной длины и заменяет символы переноса строки на HTML-элемент <br>
+    Splits the text into lines of a given length and replaces line breaks with the HTML element <br>
 
         Параметры:
         ----------
@@ -101,7 +101,7 @@ def set_widget_style(widget_text, font_family: str = None, font_size: int = None
 
 def hide_menu_button():
     """
-    Скрывает кнопку вызова меню.
+    Hides the menu button.
     """
     st.markdown(
         """
@@ -117,7 +117,7 @@ def hide_menu_button():
 
 def remove_blank_space():
     """
-    Удаляет пустое пространство вверху страницы.
+    Removes white space at the top of the page.
     """
     st.markdown(f'''
                 <style>
