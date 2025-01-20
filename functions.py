@@ -10,26 +10,24 @@ import streamlit as st
 
 def trimean_mod(data, axis=0):
     '''
-    Функция возвращает модифицированный тример,
-    рассчитываемый как средневзвешенное медианы, 10-го и 90-го персентиля в пропорции 8:1:1.
-    Расчет производится вдоль указанной оси выборки данных.
+    Calculates the weighted average of the median, 10th and 90th percentiles in the ratio 8:1:1 along the specified axis.
 
-        Параметры:
+        Parameters:
         ----------
         data : pandas.Series, pandas.DataFrame или numpy.ndarray
-            Выборка данных, для которой рассчитывается триммер.
+            The data set for witch trimmer is calculated.
 
-        axis : {0, 1, 'index', 'columns'}, по умолчанию - 0
-            Если равно 0 или 'index', то расчёт производится по строкам, 
-            если 1 или 'columns', то по столбцам.
-            Используется, если data - это pandas.DataFrame или numpy.array
+        axis : {0, 1, 'index', 'columns'}, default - 0
+            If equals to 0 or 'index' then the value is calculating along the rows, 
+            If equals to 1 or 'columns' then the value is calculating along the columns.
+            Applicatable only if data is pandas.DataFrame or numpy.array
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-            Объект типа float, если data - это pandas.Series
-            Объект типа pandas.Series, если data - это pandas.DataFrame. Индексы совпадают с индексами data 
+            Float value if data is это pandas.Series
+            Pandas.Series object if data is pandas.DataFrame. The indices are совпадают с индексами data 
                 по противоложной выбранной оси
-            Объект типа 1d numpy.ndarray, если data - это numpy.ndarray. 
+            Numpy.ndarray object if data is numpy.ndarray. 
 
     '''
     if type(data) == pd.Series:
@@ -50,9 +48,9 @@ def trimean_mod(data, axis=0):
 
 def trimean_mod_diff(a, b, axis=0):
     '''
-    Функция возвращает разницу модифицированных тримеров (подробнее см. 'trimean_mod') двух выборок.
+    Returns substruction of modified trimmers (for more details see 'trimean_mod' function) for two data sets.
 
-        Параметры:
+        Parameters:
         ----------
         a, b : pandas.Series, pandas.DataFrame или numpy.ndarray
             Выборки данных, для которых рассчитывается разница модифицированных тримеров.
