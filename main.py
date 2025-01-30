@@ -227,8 +227,8 @@ with st.sidebar:
     )
 
 match choice:
-    case "Вступление":
-        plain_text = 'Исследование результатов опроса клиентов компании МегаФон'
+    case "Introduction":
+        plain_text = 'Research of MegaFon (large mobile and telecom operator) customer success survey'
         font_formatted_text = f'**{set_text_style(plain_text, font_size=80, color=MegafonColors.brandPurple)}**'
         st.markdown(font_formatted_text, unsafe_allow_html=True)
         font_formatted_text = set_text_style('&nbsp;', font_size=32)
