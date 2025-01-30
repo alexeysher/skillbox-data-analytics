@@ -96,10 +96,10 @@ def plot_csat_dist_5(data: pd.DataFrame):
 @st.cache_resource
 def plot_reason_dist(data: pd.DataFrame):
     s = pd.Series(index=[
-        "0 - Неизвестно", "1 - Недозвоны, обрывы при звонках",
+        "0 - Unknown", "1 - Недозвоны, обрывы при звонках",
         "2 - Время ожидания гудков при звонке",
-        "3 - Unsatisfiedе качество связи в зданиях, торговых центрах и т.п.",
-        "4 - Медленный мобильный Интернет", "5 - Медленная загрузка видео",
+        "3 -  качество связи в зданиях, торговых центрах и т.п.",
+        "4 - Slow mobile Internet", "5 - Slow video loading",
         "6 - Затрудняюсь ответить", "7 - Свой вариант"
     ], dtype=float)
     s.index = s.index.map(lambda x: wrap_text(x, 40))
@@ -123,10 +123,10 @@ def plot_reason_dist(data: pd.DataFrame):
 @st.cache_resource
 def plot_reason_combo_dist(data: pd.DataFrame):
     s = pd.Series(dtype=float)
-    s.loc["0, 6, 7 - Неизвестно"] = (data['Q2'].str.contains('[067]', regex=True) & (data['Q1'] <= 8)).sum()
-    s.loc["1, 2 - Голосовая связь"] = data['Q2'].str.contains('[12]', regex=True).sum()
-    s.loc["3 - Покрытие"] = data['Q2'].str.contains('3').sum()
-    s.loc["4, 5 - Мобильный интернет"] = data['Q2'].str.contains('[45]', regex=True).sum()
+    s.loc["0, 6, 7 - Unknown"] = (data['Q2'].str.contains('[067]', regex=True) & (data['Q1'] <= 8)).sum()
+    s.loc["1, 2 - Voice communication"] = data['Q2'].str.contains('[12]', regex=True).sum()
+    s.loc["3 - Coverage area"] = data['Q2'].str.contains('3').sum()
+    s.loc["4, 5 - Mobile Internet"] = data['Q2'].str.contains('[45]', regex=True).sum()
     s = s / s.sum() * 100
 
     fig = px.bar(s, orientation='h', opacity=0.5)
@@ -149,13 +149,11 @@ def show_metric_table(metrics: pd.DataFrame):
     # style = metrics.style.set_caption('ddd').set_properties({'font-size': '16px'})
     header = f''
     table = \
-        f'| {set_text_style("Метрика", tag="span", text_align="center")} ' \
-        f'| {set_text_style("Описание", tag="span", text_align="center")} ' \
-        f'| {set_text_style("Ед. изм.", tag="span", text_align="center")} ' \
-        f'| {set_text_style("Влияние", tag="span", text_align="center")} |\n' \
+        f'| {set_text_style("Metric", tag="span", text_align="center")} ' \
+        f'| {set_text_style("Impact", tag="span", text_align="center")} |\n' \
         f'|---------|----------|:--------:|:-------:|\n'
     for _, (metric, description, units, impact) \
-            in metrics[['metric', 'description', 'units', 'impact']].iterrows():
+            in metrics[['metric', 'impact']].iterrows():
         if impact == '+':
             impact = set_text_style('▲', tag='span', color=MegafonColors.brandGreen)
         elif impact == '-':
@@ -374,12 +372,12 @@ match choice:
                 df = pd.DataFrame(
                     index=["Интернет и видео", "Интернет", "Видео", "Нет"],
                     columns=[
-                        "4 - Медленный мобильный Интернет", "5 - Медленная загрузка видео",
+                        "4 - Slow mobile Internet", "5 - Slow video loading",
                     ]
                 )
-                df.loc["Интернет и видео", ("4 - Медленный мобильный Интернет", "5 - Медленная загрузка видео")] = '+'
-                df.loc["Интернет", "4 - Медленный мобильный Интернет"] = '+'
-                df.loc["Видео", "5 - Медленная загрузка видео"] = '+'
+                df.loc["Интернет и видео", ("4 - Slow mobile Internet", "5 - Slow video loading")] = '+'
+                df.loc["Интернет", "4 - Slow mobile Internet"] = '+'
+                df.loc["Видео", "5 - Slow video loading"] = '+'
                 df.fillna('-', inplace=True)
                 s = df.style
                 s.set_table_styles([
