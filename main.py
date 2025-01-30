@@ -178,7 +178,7 @@ def show_metric_table(metrics: pd.DataFrame):
 
 config.dataFrameSerialization = "arrow"
 
-st.set_page_config(page_title='Research of MegaFon customer success survey',
+st.set_page_config(page_title='Research of MegaFon (large mobile and telecom operator) customer success survey',
                    page_icon='bar-chart', layout='wide')
 # hide_menu_button()
 remove_blank_space()
