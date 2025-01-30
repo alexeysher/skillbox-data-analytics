@@ -42,13 +42,13 @@ def load_data() -> [pd.DataFrame]:
     data_clean = data.loc[(data['Q1'] >= 9) | data['Q2'].str.contains('[45]', regex=True)].copy()
     # Добавляем информацию об оценке сервиса мобильного интернета
     data_clean['Internet score'] = data_clean['Q1'].apply(
-        lambda q1: 'Ужасно' if q1 <= 2 else ('Плохо' if q1 <= 4 else (
-            'Нормально' if q1 <= 6 else ('Хорошо' if q1 <= 8 else 'Отлично'))))
+        lambda q1: 'Very unsatisfied' if q1 <= 2 else ('Unsatisfied' if q1 <= 4 else (
+            'Neutral' if q1 <= 6 else ('Satisfied' if q1 <= 8 else 'Very satisfied'))))
     # Добавляем информацию о причине неудовлетворенности сервисом мобильного интернета
     data_clean['Dissatisfaction reasons'] = data_clean['Q2'].apply(
-        lambda q2: 'Интернет и видео' if q2.find('4, 5') >= 0 else (
-            'Интернет' if q2.find('4') >= 0 else (
-                'Видео' if q2.find('5') >= 0 else 'Нет')))
+        lambda q2: 'Internet and video' if q2.find('4, 5') >= 0 else (
+            'Internet' if q2.find('4') >= 0 else (
+                'Video' if q2.find('5') >= 0 else 'No')))
     # Сортируем данные так, чтобы причины неудовлетворенности располагались в обозначенном поряке
     data_clean.sort_values(['Q1', 'Q2'],
                            key=lambda x: x if x.name == 'Q1' else (x.str.contains('5') - x.str.contains('4, 5') * 2),
@@ -62,7 +62,7 @@ def load_data() -> [pd.DataFrame]:
                         "Задержка старта воспроизведения видео",
                         "Скорость загрузки web-страниц через браузер",
                         "Пинг при просмотре web-страниц"],
-        'units': ["МБ", "кбит/с", "кбит/с", "%", "кбит/с", "мс", "кбит/с", "мс"],
+        'units': ["MB", "kbit/s", "kbit/s", "%", "kbit/s", "ms", "kbit/s", "ms"],
         'impact': ['0', '+', '-', '+', '+', '-', '+', '-']
     }, index=pd.Index(data.columns.drop(['Q1', 'Q2']), name='metric'))
     metrics['label'] = metrics['description'].apply(lambda d: '<b>' + wrap_text(d, 30) + '</b>')
@@ -107,7 +107,7 @@ def plot_reason_dist(data: pd.DataFrame):
     s = pd.Series(index=[
         "0 - Неизвестно", "1 - Недозвоны, обрывы при звонках",
         "2 - Время ожидания гудков при звонке",
-        "3 - Плохое качество связи в зданиях, торговых центрах и т.п.",
+        "3 - Unsatisfiedе качество связи в зданиях, торговых центрах и т.п.",
         "4 - Медленный мобильный Интернет", "5 - Медленная загрузка видео",
         "6 - Затрудняюсь ответить", "7 - Свой вариант"
     ], dtype=float)
@@ -354,14 +354,14 @@ match choice:
                                            text_align='center', color=MegafonColors.brandPurple),
                             unsafe_allow_html=True)
                 df = pd.DataFrame(
-                    index=["Ужасно", "Плохо", "Нормально", "Хорошо", "Отлично"],
+                    index=["Ужасно", "Unsatisfied", "Neutral", "Satisfied", "Very satisfied"],
                     columns=pd.RangeIndex(1, 11)
                 )
                 df.loc["Ужасно", (1, 2)] = '+'
-                df.loc["Плохо", (3, 4)] = '+'
-                df.loc["Нормально", (5, 6)] = '+'
-                df.loc["Хорошо", (7, 8)] = '+'
-                df.loc["Отлично", (9, 10)] = '+'
+                df.loc["Unsatisfied", (3, 4)] = '+'
+                df.loc["Neutral", (5, 6)] = '+'
+                df.loc["Satisfied", (7, 8)] = '+'
+                df.loc["Very satisfied", (9, 10)] = '+'
                 df.fillna('-', inplace=True)
                 s = df.style
                 s.set_table_styles([
@@ -533,13 +533,13 @@ match choice:
             c1, c2 = st.columns(2, gap='medium')
             with c1:
                 st.markdown('&nbsp;')
-                s = display_cat_info(data_clean).set_properties(pd.IndexSlice['Ужасно':'Хорошо', 'Интернет и видео'],
+                s = display_cat_info(data_clean).set_properties(pd.IndexSlice['Ужасно':'Satisfied', 'Интернет и видео'],
                                                                 color='white',
                                                                 background=px.colors.DEFAULT_PLOTLY_COLORS[0],
                                                                 opacity=0.5).set_properties(
-                    pd.IndexSlice['Ужасно':'Хорошо', 'Интернет'], color='white',
+                    pd.IndexSlice['Ужасно':'Satisfied', 'Интернет'], color='white',
                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5).set_properties(
-                    pd.IndexSlice['Ужасно':'Хорошо', 'Видео'], color='white',
+                    pd.IndexSlice['Ужасно':'Satisfied', 'Видео'], color='white',
                     background=px.colors.DEFAULT_PLOTLY_COLORS[2],
                     opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_dist"), unsafe_allow_html=True)
@@ -773,9 +773,9 @@ match choice:
             c1, c2 = st.columns(2, gap='medium')
             with c1:
                 s = display_cat_info(data_clean) \
-                    .set_properties(pd.IndexSlice['Ужасно':'Хорошо', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Ужасно':'Satisfied', 'Интернет и видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[0], opacity=0.5) \
-                    .set_properties(pd.IndexSlice['Ужасно':'Хорошо', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Ужасно':'Satisfied', 'Интернет': 'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_5_5"), unsafe_allow_html=True)
                 categories = '''
@@ -827,10 +827,10 @@ match choice:
             <br>
             <ul>
             <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:18px">&nbsp;Ужасно&nbsp;</span></li>
-            <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:18px">&nbsp;Плохо&nbsp;</span></li>
-            <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:18px">&nbsp;Нормально&nbsp;</span></li>
-            <li><span style="color:white;background-color:rgb(214, 39, 40);opacity:0.5;font-size:18px">&nbsp;Хорошо&nbsp;</span></li>
-            <li><span style="color:white;background-color:rgb(148, 103, 189);opacity:0.5;font-size:18px">&nbsp;Отлично&nbsp;</span></li>
+            <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:18px">&nbsp;Unsatisfied&nbsp;</span></li>
+            <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:18px">&nbsp;Neutral&nbsp;</span></li>
+            <li><span style="color:white;background-color:rgb(214, 39, 40);opacity:0.5;font-size:18px">&nbsp;Satisfied&nbsp;</span></li>
+            <li><span style="color:white;background-color:rgb(148, 103, 189);opacity:0.5;font-size:18px">&nbsp;Very satisfied&nbsp;</span></li>
             </ul>
                             '''
                 st.markdown(categories, unsafe_allow_html=True)
@@ -968,7 +968,7 @@ match choice:
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{Ужасно}-\hat{TM}_{Плохо}')
+            c1.latex('\Delta \hat{TM}=\hat{TM}_{Ужасно}-\hat{TM}_{Unsatisfied}')
             c2.latex('H_0:\Delta \hat{TM}≥0')
             c3.latex('H_1:\Delta \hat{TM}<0')
             st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
@@ -1002,7 +1002,7 @@ match choice:
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{Плохо}-\hat{TM}_{Нормально}')
+            c1.latex('\Delta \hat{TM}=\hat{TM}_{Unsatisfied}-\hat{TM}_{Neutral}')
             c2.latex('H_0:\Delta \hat{TM}≥0')
             c3.latex('H_1:\Delta \hat{TM}<0')
             st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
@@ -1036,7 +1036,7 @@ match choice:
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{Нормально}-\hat{TM}_{Хорошо}')
+            c1.latex('\Delta \hat{TM}=\hat{TM}_{Neutral}-\hat{TM}_{Satisfied}')
             c2.latex('H_0:\Delta \hat{TM}≥0')
             c3.latex('H_1:\Delta \hat{TM}<0')
             st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
@@ -1070,7 +1070,7 @@ match choice:
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{Хорошо}-\hat{TM}_{Отлично}')
+            c1.latex('\Delta \hat{TM}=\hat{TM}_{Satisfied}-\hat{TM}_{Very satisfied}')
             c2.latex('H_0:\Delta \hat{TM}≥0')
             c3.latex('H_1:\Delta \hat{TM}<0')
             st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
@@ -1108,11 +1108,11 @@ match choice:
             c1, c2 = st.columns(2, gap='medium')
             with c1:
                 s = display_cat_info(data_clean)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Плохо', 'Интернет и видео':'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет и видео':'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[0], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Нормально': 'Хорошо', 'Интернет и видео':'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет и видео':'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Отлично', 'Нет'], color='white',
+                    .set_properties(pd.IndexSlice['Very satisfied', 'Нет'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_6_5"), unsafe_allow_html=True)
                 categories = '''
@@ -1120,7 +1120,7 @@ match choice:
                 <ul>
                 <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:18px">&nbsp;Неудовлетворительно&nbsp;</span>&nbsp</li>
                 <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:18px">&nbsp;Удовлетворительно&nbsp;</span>&nbsp</li>
-                <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:18px">&nbsp;Отлично&nbsp;</span>&nbsp</li>
+                <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:18px">&nbsp;Very satisfied&nbsp;</span>&nbsp</li>
                 </ul>
                 '''
                 st.markdown(categories, unsafe_allow_html=True)
@@ -1130,9 +1130,9 @@ match choice:
                             unsafe_allow_html=True)
                 conclusion_text = '''
                 <ul>
-                <li><span style="font-size:24px">Клиенты группы "<b>Ужасно</b>" и "<b>Плохо</b>" 
+                <li><span style="font-size:24px">Клиенты группы "<b>Ужасно</b>" и "<b>Unsatisfied</b>" 
                 принадлежат к <b>одной популяции</b>.</span></li>
-                <li><span style="font-size:24px">Клиенты группы "<b>Нормально</b>" и "<b>Хорошо</b>" 
+                <li><span style="font-size:24px">Клиенты группы "<b>Neutral</b>" и "<b>Satisfied</b>" 
                 принадлежат к <b>одной популяции</b>.</span></li>
                 <li><span style="font-size:24px">Самое сильное влияние у метрики "<b>Скорость загрузки потокового видео</b>", 
                 а самое слабое у метрики <b>Средняя скорость «к абоненту»</b>.</span></li>
@@ -1152,15 +1152,15 @@ match choice:
             with c1:
                 st.markdown('&nbsp;')
                 s = display_cat_info(data_clean)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Плохо', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет и видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[0], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Плохо', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет': 'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Нормально': 'Хорошо', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет и видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Нормально': 'Хорошо', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет': 'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[3], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Отлично', 'Нет'], color='white',
+                    .set_properties(pd.IndexSlice['Very satisfied', 'Нет'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[4], opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_dist"), unsafe_allow_html=True)
                 categories = '''
@@ -1448,15 +1448,15 @@ match choice:
             c1, c2 = st.columns(2, gap='medium')
             with c1:
                 s = display_cat_info(data_clean)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Плохо', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет и видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[0], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Плохо', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет': 'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Нормально': 'Хорошо', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет и видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Нормально': 'Хорошо', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет': 'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Отлично', 'Нет'], color='white',
+                    .set_properties(pd.IndexSlice['Very satisfied', 'Нет'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[3], opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_7_5"), unsafe_allow_html=True)
                 categories = '''
@@ -1494,15 +1494,15 @@ match choice:
             with c1:
                 st.markdown('&nbsp;')
                 s = display_cat_info(data_clean)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Плохо', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет и видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[0], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Плохо', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет': 'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Нормально': 'Хорошо', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет и видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Нормально': 'Хорошо', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет': 'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Отлично', 'Нет'], color='white',
+                    .set_properties(pd.IndexSlice['Very satisfied', 'Нет'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[3], opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_dist"), unsafe_allow_html=True)
                 categories = '''
@@ -1749,7 +1749,7 @@ match choice:
                 fig = px.scatter(
                     df, x=df.index, y='value',
                     title=' ',
-                    labels={'x': '', 'value': 'кбит/с', 'index': 'CSAT'}, trendline="ols")
+                    labels={'x': '', 'value': 'kbit/s', 'index': 'CSAT'}, trendline="ols")
                 fig.update_layout(title_x=0.5, title_y=0.95, title_font_size=14,
                                   width=500, height=350,
                                   margin_t=40, margin_b=0)
@@ -1801,7 +1801,7 @@ match choice:
             ci['Video Streaming Download Throughput(Kbps)'],
             metrics=research_metrics.loc['Video Streaming Download Throughput(Kbps)'],
             caption='', caption_font_size=12, opacity=0.5, precision=1, index_width=30)
-        '851 кбит/с'
+        '851 kbit/s'
         s = display_confidence_interval(ci['Video Streaming Download Throughput(Kbps)'],
                                         metrics=research_metrics.loc['Video Streaming Download Throughput(Kbps)'],
                                         caption='', caption_font_size=12, opacity=0.5, precision=1, index_width=30)
