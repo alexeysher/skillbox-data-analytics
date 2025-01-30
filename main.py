@@ -236,8 +236,8 @@ match choice:
         author = set_text_style('Author: ', font_size=48, color=MegafonColors.brandGreen, tag='span') + \
                  set_text_style('**Alexey Sherstobitov**', font_size=48, color=MegafonColors.brandGreen, tag='span')
         st.markdown(author, unsafe_allow_html=True)
-    case "Подготовка данных и разведочный анализ":
-        tabs = ['Ответ на 1-ый вопрос', 'Ответ на 2-ой вопрос', 'Значения метрик']
+    case "Data preparation and exploratory analysis":
+        tabs = ['1st question answers', '2nd question answers', 'Metric values']
         tab1, tab2, tab3 = st.tabs(tabs)
         for tab in tabs:
             set_widget_style(tab, font_size=24)
