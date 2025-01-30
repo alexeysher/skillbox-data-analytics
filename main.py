@@ -243,7 +243,7 @@ match choice:
             set_widget_style(tab, font_size=24)
         with tab1:
             st.markdown(
-                set_text_style('<b>Распределение клиентов по уровню удовлетворенности качеством связи</b>',
+                set_text_style('<b>Distribution of customers by quality satisfaction rates</b>',
                                font_size=24, text_align='center',
                                # color=MegafonColors.brandPurple
                                ),
@@ -251,39 +251,39 @@ match choice:
             )
             c1, c2 = st.columns([64, 36], gap='medium')
             with c1:
-                col_title = set_text_style('<b>✘</b> ', tag='span', color='red') + '10-бальная шкала'
+                col_title = set_text_style('<b>✘</b> ', tag='span', color='red') + '10-point scale'
                 col_title = set_text_style(col_title, font_size=24, text_align='center')
                 st.markdown(col_title, unsafe_allow_html=True)
                 fig = plot_csat_dist_10(data)
                 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             with c2:
-                col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + '5-бальная шкала'
+                col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + '5-point scale'
                 col_title = set_text_style(col_title, font_size=24, text_align='center')
                 st.markdown(col_title, unsafe_allow_html=True)
                 fig = plot_csat_dist_5(data)
                 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
         with tab2:
             st.markdown(
-                set_text_style('<b>Распределение причин снижения оценки</b>',
+                set_text_style('<b>Distribution of reasons for quality dissatisfaction</b>',
                                # color=MegafonColors.brandPurple,
                                font_size=24, text_align='center'),
                 unsafe_allow_html=True
             )
             c1, c2 = st.columns([53, 47], gap='medium')
             with c1:
-                col_title = set_text_style('<b>✘</b> ', tag='span', color='red') + 'Исходные'
+                col_title = set_text_style('<b>✘</b> ', tag='span', color='red') + 'Original'
                 col_title = set_text_style(col_title, font_size=20, text_align='center')
                 st.markdown(col_title, unsafe_allow_html=True)
                 fig = plot_reason_dist(data)
                 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             with c2:
-                col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + 'Объединённые'
+                col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + 'United'
                 col_title = set_text_style(col_title, font_size=20, text_align='center')
                 st.markdown(col_title, unsafe_allow_html=True)
                 fig = plot_reason_combo_dist(data)
                 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
         with tab3:
-            st.markdown(set_text_style('<b>Плотность распределения вероятностей метрик в наблюдаемой выборке</b>',
+            st.markdown(set_text_style('<b>Probability density distribution of metrics in the observed sample</b>',
                                        font_size=24, text_align='center'),
                         unsafe_allow_html=True
                         )
@@ -291,7 +291,7 @@ match choice:
             st.markdown(metrics_table, unsafe_allow_html=True)
             st.markdown('---')
             st.markdown(
-                set_text_style('<b>Плотность распределения вероятностей метрик в наблюдаемой выборке</b>',
+                set_text_style('<b>Probability density distribution of metrics in the observed sample</b>',
                                # color=MegafonColors.brandPurple,
                                font_size=24, text_align='center'),
                 unsafe_allow_html=True
