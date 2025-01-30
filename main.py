@@ -243,7 +243,7 @@ match choice:
             set_widget_style(tab, font_size=24)
         with tab1:
             st.markdown(
-                set_text_style('<b>Distribution of customers by quality satisfaction rates</b>',
+                set_text_style('<b>Distribution of customers by quality satisfaction scores</b>',
                                font_size=24, text_align='center',
                                # color=MegafonColors.brandPurple
                                ),
@@ -251,13 +251,13 @@ match choice:
             )
             c1, c2 = st.columns([64, 36], gap='medium')
             with c1:
-                col_title = set_text_style('<b>✘</b> ', tag='span', color='red') + '10-point scale'
+                col_title = set_text_style('<b>✘</b> ', tag='span', color='red') + '10-score scale'
                 col_title = set_text_style(col_title, font_size=24, text_align='center')
                 st.markdown(col_title, unsafe_allow_html=True)
                 fig = plot_csat_dist_10(data)
                 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             with c2:
-                col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + '5-point scale'
+                col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + '5-score scale'
                 col_title = set_text_style(col_title, font_size=24, text_align='center')
                 st.markdown(col_title, unsafe_allow_html=True)
                 fig = plot_csat_dist_5(data)
@@ -271,13 +271,13 @@ match choice:
             )
             c1, c2 = st.columns([53, 47], gap='medium')
             with c1:
-                col_title = set_text_style('<b>✘</b> ', tag='span', color='red') + 'Original'
+                col_title = set_text_style('<b>✘</b> ', tag='span', color='red') + 'Initial'
                 col_title = set_text_style(col_title, font_size=20, text_align='center')
                 st.markdown(col_title, unsafe_allow_html=True)
                 fig = plot_reason_dist(data)
                 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             with c2:
-                col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + 'United'
+                col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + 'Modified'
                 col_title = set_text_style(col_title, font_size=20, text_align='center')
                 st.markdown(col_title, unsafe_allow_html=True)
                 fig = plot_reason_combo_dist(data)
@@ -307,10 +307,10 @@ match choice:
                 add_boxplot=True, add_kde=True, add_mean=True,
                 horizontal_spacing=0.07, vertical_spacing=0.15)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
-    case "Постановка цели":
-        tabs = ['Цель исследования',
-                'Исходные категории',
-                'Карта распределения']
+    case "Goals settings":
+        tabs = ['Objective of the research',
+                'Initial categories',
+                'Distribution map']
         tab1, tab2, tab3 = st.tabs(tabs)
         for tab in tabs:
             set_widget_style(tab, font_size=24)
@@ -323,15 +323,15 @@ match choice:
             st.markdown('&nbsp;')
             df = pd.DataFrame(
                 index=[
-                    "0 - Неизвестно", "1 - Недозвоны, обрывы при звонках",
-                    "2 - Время ожидания гудков при звонке",
-                    "3 - Плохое качество связи в зданиях, торговых центрах и т.п.",
-                    "4 - Медленный мобильный Интернет", "5 - Медленная загрузка видео",
-                    "6 - Затрудняюсь ответить", "7 - Свой вариант"
+                    "0 - Unknown", "1 - Missed calls, disconnected calls",
+                    "2 - Waiting time for ringtones",
+                    "3 - Poor connection quality in buildings, shopping centers, etc.",
+                    "4 - Slow mobile Internet", "5 - Slow video loading",
+                    "6 - Difficult to answer", "7 - Your own option"
                 ],
                 columns=pd.RangeIndex(1, 11)
             )
-            df.loc[("4 - Медленный мобильный Интернет", "5 - Медленная загрузка видео"), :] = '+'
+            df.loc[("4 - Slow mobile Internet", "5 -  Slow video loading"), :] = '+'
             df.loc[:, (9, 10)] = '+'
             df.fillna('-', inplace=True)
             s = df.style
@@ -812,15 +812,15 @@ match choice:
             with c1:
                 st.markdown('&nbsp;')
                 s = display_cat_info(data_clean)\
-                    .set_properties(pd.IndexSlice['Ужасно', 'Интернет и видео': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Very dissatisfied', 'Интернет и видео': 'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[0], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Плохо', 'Интернет и видео': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Dissatisfied', 'Интернет и видео': 'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Нормально', 'Интернет и видео': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral', 'Интернет и видео': 'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Хорошо', 'Интернет и видео': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Satisfied', 'Интернет и видео': 'Видео'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[3], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Отлично', 'Нет'], color='white',
+                    .set_properties(pd.IndexSlice['Very satisfied', 'Нет'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[4], opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_dist"), unsafe_allow_html=True)
                 categories = '''
