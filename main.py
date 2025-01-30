@@ -199,16 +199,16 @@ with st.sidebar:
     choice = option_menu(
         '',
         options=[
-            "Вступление",
-            "Подготовка данных и разведочный анализ",
+            "Introduction",
+            "Data preparation and exploratory analysis",
             "Постановка цели",
-            "Выбор метрик, статистик и критериев",
-            "Причины недовольства сервисом мобильного интернета",
+            "Selection of metrics, statistics and criteria",
+            "Reasons for dissatisfaction with mobile internet service",
             "Оценки качества сервиса мобильного интернета",
             "Уровни удовлетворенности сервисом мобильного интернета",
             "Влияние метрик на уровень удовлетворенности",
             "---",
-            "Заключение"
+            "Summary"
         ],
         icons=[
             "",
@@ -408,7 +408,7 @@ match choice:
             s = display_cat_info(data_clean)
             st.markdown(s.to_html(table_uuid="table_categories_dist"), unsafe_allow_html=True)
 
-    case "Выбор метрик, статистик и критериев":
+    case "Reasons for dissatisfaction with mobile internet service":
 
         @st.cache_resource
         def show_important_metric_table(metrics: pd.DataFrame):
