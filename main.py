@@ -56,6 +56,7 @@ def load_data() -> [pd.DataFrame]:
     metrics = pd.DataFrame({
         'impact': ['0', '+', '-', '+', '+', '-', '+', '-']
     }, index=pd.Index(data.columns.drop(['Q1', 'Q2']), name='metric'))
+    print(metrics)
     metrics['label'] = metrics.index.apply(lambda d: '<b>' + wrap_text(d, 30) + '</b>')
     return data, data_clean, metrics
 
