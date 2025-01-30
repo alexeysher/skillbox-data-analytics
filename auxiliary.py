@@ -4,6 +4,9 @@ import textwrap
 
 
 class MegafonColors:
+    '''
+    Megafon brand colors
+    '''
     base = '#FFF'
     content = '#333'
     brandGreen = '#00b956'
@@ -22,25 +25,28 @@ class MegafonColors:
 
 def wrap_text(text, length=50):
     '''
-    Функция разбивает текст на строки заданной длины и заменяет символы переноса строки на HTML-элемент <br>
+    Splits the text into lines of a given length and replaces line breaks with the HTML element <br>
 
-        Параметры:
+        Parameters:
         ----------
         text : string
-            Обрабатываемый текст.
+            Text to process.
 
         length : int
-            Максимальная длина строк
+            Maximum string length
 
-        Возвращаемый результат:
+        Return:
         -----------------------
-            Объект типа string.
+            Object of type string.
     '''
     return textwrap.fill(text, length).replace('\n', '<br>')
 
 
 def set_text_style(text: str, tag: str = 'p', font_family: str = None, font_size: int = None,
                    color: str = None, background_color: str = None, text_align: str = None):
+    '''
+    Returns HTML-tag for given text with specified format.
+    '''
     variables = []
     if font_family is not None:
         variables.append(f'font-family: {font_family}')
@@ -59,6 +65,9 @@ def set_text_style(text: str, tag: str = 'p', font_family: str = None, font_size
 
 def set_widget_style(widget_text, font_family: str = None, font_size: int = None,
                      color: str = None, background_color: str = None, text_align: str = None):
+    '''
+    Sets the style of the widget containing the specified text.
+    '''
     html = \
         """
     <script>
@@ -101,7 +110,7 @@ def set_widget_style(widget_text, font_family: str = None, font_size: int = None
 
 def hide_menu_button():
     """
-    Скрывает кнопку вызова меню.
+    Hides the menu button.
     """
     st.markdown(
         """
@@ -117,7 +126,7 @@ def hide_menu_button():
 
 def remove_blank_space():
     """
-    Удаляет пустое пространство вверху страницы.
+    Removes white space at the top of the page.
     """
     st.markdown(f'''
                 <style>
