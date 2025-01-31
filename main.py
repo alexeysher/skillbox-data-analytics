@@ -13,7 +13,8 @@ from pickle import load
 def load_data() -> [pd.DataFrame]:
     data = pd.read_csv('megafon.csv')
     data.drop(columns='user_id', inplace=True)
-    data = data[data.Q1.str.isdecimal().fillna(False)]
+    data = data[data.Q1.notna()]
+    data = data[data.Q1.str.isdecimal()]
     data.Q1 = data.Q1.astype(int)
     data = data[(data.Q1 >= 1) & (data.Q1 <= 10)]
     # Заполняем нулями отсутствующие ответы на второй вопрос
@@ -56,7 +57,11 @@ def load_data() -> [pd.DataFrame]:
     metrics = pd.DataFrame({
         'impact': ['0', '+', '-', '+', '+', '-', '+', '-']
     }, index=pd.Index(data.columns.drop(['Q1', 'Q2']), name='metric'))
-    metrics['label'] = metrics.index.apply(lambda d: '<b>' + wrap_text(d, 30) + '</b>')
+    print('!'*100)
+    print(metrics.index)
+    print('!'*100)
+    metrics['label'] = metrics.index
+    metrics['label'] = metrics['label'].apply(lambda d: '<b>' + wrap_text(d, 30) + '</b>')
     return data, data_clean, metrics
 
 
@@ -152,7 +157,7 @@ def show_metric_table(metrics: pd.DataFrame):
         f'| {set_text_style("Metric", tag="span", text_align="center")} ' \
         f'| {set_text_style("Impact", tag="span", text_align="center")} |\n' \
         f'|---------|----------|:--------:|:-------:|\n'
-    for _, (metric, description, units, impact) \
+    for _, (metric, impact) \
             in metrics[['metric', 'impact']].iterrows():
         if impact == '+':
             impact = set_text_style('▲', tag='span', color=MegafonColors.brandGreen)
@@ -160,7 +165,7 @@ def show_metric_table(metrics: pd.DataFrame):
             impact = set_text_style('▼', tag='span', color='red')
         else:
             impact = '─'
-        table += f'|{metric}|{description}|{units}|{impact}|\n'
+        table += f'|{metric}|{impact}|\n'
 
     return table
 
@@ -266,7 +271,7 @@ match choice:
                 fig = plot_reason_dist(data)
                 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             with c2:
-                col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + 'Modified'
+                col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + 'Combined'
                 col_title = set_text_style(col_title, font_size=20, text_align='center')
                 st.markdown(col_title, unsafe_allow_html=True)
                 fig = plot_reason_combo_dist(data)
