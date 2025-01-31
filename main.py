@@ -55,13 +55,18 @@ def load_data() -> [pd.DataFrame]:
                            key=lambda x: x if x.name == 'Q1' else (x.str.contains('5') - x.str.contains('4, 5') * 2),
                            inplace=True)
     metrics = pd.DataFrame({
+        'description': ["Объем трафика передачи данных",
+                        "Средняя скорость «к абоненту»",
+                        "Средняя скорость «от абонента»",
+                        "Частота переотправок пакетов «к абоненту»",
+                        "Скорость загрузки потокового видео",
+                        "Задержка старта воспроизведения видео",
+                        "Скорость загрузки web-страниц через браузер",
+                        "Пинг при просмотре web-страниц"],
+        'units': ["МБ", "кбит/с", "кбит/с", "%", "кбит/с", "мс", "кбит/с", "мс"],
         'impact': ['0', '+', '-', '+', '+', '-', '+', '-']
     }, index=pd.Index(data.columns.drop(['Q1', 'Q2']), name='metric'))
-    print('!'*100)
-    print(metrics.index)
-    print('!'*100)
-    metrics['label'] = metrics.index
-    metrics['label'] = metrics['label'].apply(lambda d: '<b>' + wrap_text(d, 30) + '</b>')
+    metrics['label'] = metrics['description'].apply(lambda d: '<b>' + wrap_text(d, 30) + '</b>')
     return data, data_clean, metrics
 
 
