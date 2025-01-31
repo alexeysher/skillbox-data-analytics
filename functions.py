@@ -1135,9 +1135,9 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
                              showgrid=True, showticklabels=False, row=row, col=col)
             # У \"ящиков с усами\" скрываем название оси y и метки на ней
             fig.update_yaxes(title='', row=row, col=col, showticklabels=False)
-        fig.update_xaxes(title=metrics['units'].iloc[index], titlefont_size=units_font_size,
+        fig.update_xaxes(title=metrics['units'].iloc[index], title_font_size=units_font_size,
                          row=row + (1 if add_boxplot else 0), col=col)
-        fig.update_yaxes(title=yaxis_title, titlefont_size=units_font_size,
+        fig.update_yaxes(title=yaxis_title, title_font_size=units_font_size,
                          row=row + (1 if add_boxplot else 0), col=col)
 
     fig.update_xaxes(tickfont_size=axes_tickfont_size)
@@ -1253,8 +1253,8 @@ def plot_metric_confidence_interval(data, metrics, title=None, title_y=None, yax
                                 marker_line_color='white', marker_line_width=1, marker_size=10, opacity=opacity,
                                 showlegend=index == 0, legendgroup=group,
                                 hovertemplate='%{x:.1f}, (%{customdata[0]:.1f}, %{customdata[1]:.1f})')
-        fig.update_xaxes(title=metrics.loc[metric, 'units'], titlefont_size=units_font_size, row=row, col=col)
-        fig.update_yaxes(title=yaxis_title, titlefont_size=units_font_size, row=row, col=col)
+        fig.update_xaxes(title=metrics.loc[metric, 'units'], title_font_size=units_font_size, row=row, col=col)
+        fig.update_yaxes(title=yaxis_title, title_font_size=units_font_size, row=row, col=col)
     fig.update_xaxes(tickfont_size=axes_tickfont_size)
     fig.update_yaxes(visible=False, tickfont_size=axes_tickfont_size)
     fig.update_annotations(font_size=labels_font_size, y=1.1)
