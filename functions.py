@@ -1,4 +1,3 @@
-# Импортируем необходимые библиотеки
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -562,19 +561,19 @@ def display_cat_info(data):
         level=1, fill_value=0)
     df.index.name = None
     df.columns.name = ''
-    df = df.applymap(lambda x: x if x > 0 else '-')
+    df = df.map(lambda x: x if x > 0 else '-')
     s = df.style.set_table_styles([
         {'selector': 'th:not(.index_name)',
-         'props': f'font-size: 16px; color: white; background-color: {MegafonColors.brandPurple80};'},
+         'props': f'font-size: 20px; font-weight: normal; color: white; background-color: {MegafonColors.brandPurple80};'},
         {'selector': 'th.col_heading', 'props': 'text-align: center; width: 100px;'},
-        {'selector': 'td', 'props': 'text-align: center; font-size: 16px; font-weight: bold;'},
+        {'selector': 'td', 'props': 'text-align: center; font-size: 20px; font-weight: normal;'},
         {'selector': 'th.index_name', 'props': 'border-style: none'}
     ],
        overwrite=False
     )
-    s = s.applymap(lambda v:
-                   f'color: white; background-color: {MegafonColors.brandGreen};' if v != '-'
-                   else f'color: {MegafonColors.spbSky2}; background-color: {MegafonColors.spbSky1};')
+    s = s.map(lambda v:
+              f'color: white; background-color: {MegafonColors.brandGreen};' if v != '-'
+              else f'color: {MegafonColors.spbSky2}; background-color: {MegafonColors.spbSky1};')
     return s
 
 
@@ -623,19 +622,19 @@ def display_statistics(data, axis=0, metrics=None, precision=1, caption=None, ca
 
     df = data.copy()
     if axis == 0:
-        df.columns = metrics['description']
+        df.columns = metrics['name']
         df.columns.name = 'Метрика'
         df.index.name = 'Группа'
-        positive_subset = pd.IndexSlice[:, metrics.loc[metrics.impact == '+', 'description'].to_list()]
-        negative_subset = pd.IndexSlice[:, metrics.loc[metrics.impact == '-', 'description'].to_list()]
+        positive_subset = pd.IndexSlice[:, metrics.loc[metrics.impact == '+', 'name'].to_list()]
+        negative_subset = pd.IndexSlice[:, metrics.loc[metrics.impact == '-', 'name'].to_list()]
     else:
-        df.index = metrics['description']
+        df.index = metrics['name']
         df.index.name = 'Метрика'
         df.columns.name = 'Группа'
-        positive_subset = pd.IndexSlice[metrics.loc[metrics.impact == '+', 'description'].to_list(), :]
-        negative_subset = pd.IndexSlice[metrics.loc[metrics.impact == '-', 'description'].to_list(), :]
+        positive_subset = pd.IndexSlice[metrics.loc[metrics.impact == '+', 'name'].to_list(), :]
+        negative_subset = pd.IndexSlice[metrics.loc[metrics.impact == '-', 'name'].to_list(), :]
 
-    style = df.style.applymap_index(lambda
+    style = df.style.map_index(lambda
                                         group: f'color: white; background-color:         {px.colors.DEFAULT_PLOTLY_COLORS[df.axes[axis].get_loc(group)]}; opacity: {opacity}',
                                     axis=axis).set_caption(caption).set_table_styles([
         {'selector': 'caption', 'props': f'font-size:{caption_font_size}pt; text-align: center; color: black'},
@@ -708,18 +707,18 @@ def display_pvalues(data, axis=0, metrics=None, precision=4, alpha=0.05, caption
     df = data.copy()
     if axis == 0:
         df.index = pd.MultiIndex.from_tuples(df.index.str.split(', ').map(lambda x: tuple(x)), name=[None, None])
-        df.columns = pd.Index(metrics['description'].to_list(), name=None)
+        df.columns = pd.Index(metrics['name'].to_list(), name=None)
         groups = pd.Index(df.index.get_level_values(0).to_list() + df.index.get_level_values(1).to_list()
                           ).drop_duplicates()
     else:
         df.columns = pd.MultiIndex.from_tuples(df.columns.str.split(', ').map(lambda x: tuple(x)), name=[None, None])
-        df.index = pd.Index(metrics['description'].to_list(), name=None)
+        df.index = pd.Index(metrics['name'].to_list(), name=None)
         groups = pd.Index(df.columns.get_level_values(0).to_list() + df.columns.get_level_values(1).to_list()
                           ).drop_duplicates()
 
-    style = df.style.applymap_index(lambda
+    style = df.style.map_index(lambda
                                         group: f'color: white; background-color:         {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; opacity: {opacity}',
-                                    axis=axis, level=0).applymap_index(lambda
+                                    axis=axis, level=0).map_index(lambda
                                                                            group: f'color: white; background-color:         {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; opacity: {opacity}',
                                                                        axis=axis, level=1).set_caption(
         caption).set_table_styles([
@@ -728,8 +727,8 @@ def display_pvalues(data, axis=0, metrics=None, precision=4, alpha=0.05, caption
         {'selector': '.row_heading, td', 'props': f'width: {index_width}px; text-align: center;'},
         {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center;'}
     ], overwrite=False) \
-        .applymap_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=0) \
-        .applymap_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=1) \
+        .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=0) \
+        .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=1) \
         .format(precision=precision) \
         .highlight_between(right=alpha, inclusive='right', props='color: red; font-weight: bold')
 
@@ -742,104 +741,105 @@ def display_pvalues(data, axis=0, metrics=None, precision=4, alpha=0.05, caption
 def display_confidence_interval(values, axis=0, metrics=None, precision=1, caption=None, caption_font_size=12,
                                 opacity=1.0, index_width=120, col_width=80):
     '''
-    Выводит значения доверительные интервалы для одной или нескольких метрик одной или нескольких популяций 
-    в виде стилизованной таблицы с заголовком.
-    Для каждого доверительно интервала в отдельной столбце или строке выводится меньшая граница, центр и большая граница.
-    Лучшие и худщие значения центра ДИ для каждой метрики выделяются зеленым и красным цветом шрифта соответственно.
-    Цвет фона названия популяций задается из палитры px.colors.DEFAULT_PLOTLY_COLORS
-    по порядку их следования в наборе данных.
+    Outputs confidence interval values for one or more metrics in one or more populations.
+    in the form of a stylized table with a heading.
+    For each confidence interval, the minor boundary, the center, and the major boundary are displayed in a separate column or row.
+    The best and worst values of the CI center for each metric are highlighted in green and red font colors, respectively.
+    The background color of the population name is set from the px.colors.DEFAULT_PLOTLY_COLORS palette
+    in the order in which they appear in the data set.
 
-        Параметры:
+        Parameters:
         ----------
         data : DataFrame
-            Набор отображаемых значений p-value. 
-            По одной оси должны распологаться названия метрик, по другой названия пар популяций через запятую с пробелом.
+            The set of displayed p-values.
+            The names of the metrics should be located on one axis, and the names of the pairs of populations, separated by a comma and a space, should be located on the other.
 
-        axis : {0, 1}. По умолчанию - 0
-            Показывает, что расположено по строкам и столбцам набора данных.
-            0 - индексы - это названия пар популяций через запятую с пробелом, данные метрик распределены по колонкам
-            1 - колонки - это названия пар популяций через запятую с пробелом, данные метрик распределены по строкам
+        axis: {0, 1}. Default - 0
+            Shows what is located in the rows and columns of a data set.
+            0 - indices are the names of population pairs separated by commas and spaces, metric data are distributed across columns
+            1 - columns are the names of population pairs separated by commas and spaces, metric data are distributed across rows
 
-        precision : int. По умолчанию - 1
-            Количество знаков после запятой выводимых значений статистики.
+        precision : int. Default - 1
+            The number of decimal places for the output statistics values.
 
-        caption : string или None. По умолчанию - None
-            Заголовок таблицы
+        caption : string or None. Default is None
+            Table Header
 
-        caption_font_size : int. По умолчанию - 12
-            Размер шрифта заголовка таблицы
+        caption_font_size : int. Default - 12
+            Table Header Font Size
 
-        opacity : float. По умолчанию - 1.0
-            Уровень непрозрачности (от 0.0 до 1.0) фона названия популяций
+        opacity : float. Default is 1.0
+            Opacity level (from 0.0 to 1.0) of the population name background
 
-        index_width : int. По умолчанию - 120
-            Ширина колонки индексов
+        index_width : int. Default - 120
+            Index column width
 
-        col_width : int. По умолчанию - 80
-            Ширина колонок значений
+        col_width : int. Default - 80
+            Width of value columns
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-            Нет.
+            No.
     '''
     df = pd.DataFrame()
     if axis == 0:
         if type(metrics) == pd.DataFrame:
             df = pd.DataFrame(
                 columns=pd.MultiIndex.from_product(
-                    [metrics['description'], ['Начало', 'Середина', 'Конец']],
+                    [metrics['name'], ['Low bound', 'Midpoint', 'Hi bound']],
                     names=['', '']),
                 index=pd.Index(values.index.to_list(), name=None)
             )
-            positive_subsets = [pd.IndexSlice[:, (description, 'Середина')]
-                                for description in metrics.loc[metrics.impact == '+', 'description']]
-            negative_subsets = [pd.IndexSlice[:, (description, 'Середина')]
-                                for description in metrics.loc[metrics.impact == '-', 'description']]
+            positive_subsets = [pd.IndexSlice[:, (description, 'Midpoint')]
+                                for description in metrics.loc[metrics.impact == '+', 'name']]
+            negative_subsets = [pd.IndexSlice[:, (description, 'Midpoint')]
+                                for description in metrics.loc[metrics.impact == '-', 'name']]
         else:
             df = pd.DataFrame(
                 columns=pd.Index(
-                    ['Начало', 'Середина', 'Конец'],
+                    ['Low bound', 'Midpoint', 'Hi bound'],
                     name=''),
                 index=pd.Index(values.index.to_list(), name=None)
             )
-            positive_subsets = [pd.IndexSlice[:, 'Середина']] if metrics.impact == '+' else []
-            negative_subsets = [pd.IndexSlice[:, 'Середина']] if metrics.impact == '-' else []
+            positive_subsets = [pd.IndexSlice[:, 'Midpoint']] if metrics.impact == '+' else []
+            negative_subsets = [pd.IndexSlice[:, 'Midpoint']] if metrics.impact == '-' else []
     else:
         if type(metrics) == pd.DataFrame:
             df = pd.DataFrame(
                 index=pd.MultiIndex.from_product(
-                    [metrics['description'], ['Начало', 'Середина', 'Конец']],
+                    [metrics['name'], ['Low bound', 'Midpoint', 'Hi bound']],
                     names=['', '']),
                 columns=pd.Index(values.index.to_list(), name=None)
             )
-            negative_subsets = [pd.IndexSlice[(description, 'Середина'), :]
-                                for description in metrics.loc[metrics.impact == '+', 'description']]
-            positive_subsets = [pd.IndexSlice[(description, 'Середина'), :]
-                                for description in metrics.loc[metrics.impact == '-', 'description']]
+            negative_subsets = [pd.IndexSlice[(description, 'Midpoint'), :]
+                                for description in metrics.loc[metrics.impact == '+', 'name']]
+            positive_subsets = [pd.IndexSlice[(description, 'Midpoint'), :]
+                                for description in metrics.loc[metrics.impact == '-', 'name']]
         else:
             df = pd.DataFrame(
                 index=pd.Index(
-                    ['Начало', 'Середина', 'Конец'],
+                    ['Low bound', 'Midpoint', 'Hi bound'],
                     name=''),
                 columns=pd.Index(values.index.to_list(), name=None)
             )
-            positive_subsets = [pd.IndexSlice[:, 'Середина']] if metrics.impact == '+' else []
-            negative_subsets = [pd.IndexSlice[:, 'Середина']] if metrics.impact == '-' else []
+            positive_subsets = [pd.IndexSlice[:, 'Midpoint']] if metrics.impact == '+' else []
+            negative_subsets = [pd.IndexSlice[:, 'Midpoint']] if metrics.impact == '-' else []
 
     if df.columns.nlevels == 2:
         df = df.swaplevel(axis=1)
 
-        df.loc[:, 'Начало'] = values.applymap(lambda x: x[0]).to_numpy()
-        df.loc[:, 'Конец'] = values.applymap(lambda x: x[1]).to_numpy()
-        df.loc[:, 'Середина'] = (df.loc[:, 'Начало'] + df.loc[:, 'Конец']).to_numpy() / 2
+        df.loc[:, 'Low bound'] = values.map(lambda x: x[0]).to_numpy()
+        df.loc[:, 'Hi bound'] = values.map(lambda x: x[1]).to_numpy()
+        df.loc[:, 'Midpoint'] = (df.loc[:, 'Low bound'] + df.loc[:, 'Hi bound']).to_numpy() / 2
 
         df = df.swaplevel(axis=1)
     else:
-        df.loc[:, 'Начало'] = values.apply(lambda x: x[0]).to_numpy()
-        df.loc[:, 'Конец'] = values.apply(lambda x: x[1]).to_numpy()
-        df.loc[:, 'Середина'] = (df.loc[:, 'Начало'] + df.loc[:, 'Конец']).to_numpy() / 2
+        df.loc[:, 'Low bound'] = values.apply(lambda x: x[0]).to_numpy()
+        df.loc[:, 'Hi bound'] = values.apply(lambda x: x[1]).to_numpy()
+        df.loc[:, 'Midpoint'] = (df.loc[:, 'Low bound'] + df.loc[:, 'Hi bound']).to_numpy() / 2
 
-    style = df.style.applymap_index(lambda group: f'''color: white; background-color: 
+    style = df.style \
+        .map_index(lambda group: f'''color: white; background-color: 
                             {px.colors.DEFAULT_PLOTLY_COLORS[df.axes[axis].get_loc(group)]}; 
                             opacity: {opacity}''', axis=axis) \
         .set_caption(caption) \
@@ -849,19 +849,21 @@ def display_confidence_interval(values, axis=0, metrics=None, precision=1, capti
         {'selector': '.row_heading, td', 'props': f'width: {index_width}px; text-align: center;'},
         {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center;'}
     ], overwrite=False) \
-        .applymap_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=0) \
-        .applymap_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=1) \
+        .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=0) \
+        .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=1) \
         .format(precision=precision)
 
     for positive_subset in positive_subsets:
-        style = style.highlight_min(props=f'color: red; font-weight: bold;',
-                                    subset=positive_subset, axis=axis) \
+        style = style \
+            .highlight_min(props=f'color: red; font-weight: bold;',
+                           subset=positive_subset, axis=axis) \
             .highlight_max(props=f'color: green; font-weight: bold;',
                            subset=positive_subset, axis=axis)
 
     for negative_subset in negative_subsets:
-        style = style.highlight_max(props=f'color: red; font-weight: bold;',
-                                    subset=negative_subset, axis=axis) \
+        style = style \
+            .highlight_max(props=f'color: red; font-weight: bold;',
+                           subset=negative_subset, axis=axis) \
             .highlight_min(props=f'color: green; font-weight: bold;',
                            subset=negative_subset, axis=axis)
 
@@ -870,25 +872,24 @@ def display_confidence_interval(values, axis=0, metrics=None, precision=1, capti
 
     return style
 
-
 def display_confidence_interval_overlapping(values, axis=0, metrics=None, caption='', caption_font_size=12,
                                             opacity=1.0, index_width=120, col_width=130):
     df = values.applymap(lambda x: 'Да' if x == 1 else 'Нет')
     if axis == 0:
         df.index = pd.MultiIndex.from_tuples(df.index.str.split(', ').map(lambda x: tuple(x)), name=[None, None])
-        df.columns = pd.Index(metrics['description'].to_list(), name=None)
+        df.columns = pd.Index(metrics['name'].to_list(), name=None)
         groups = pd.Index(df.index.get_level_values(0).to_list() + df.index.get_level_values(1).to_list()
                           ).drop_duplicates()
     else:
         df.columns = pd.MultiIndex.from_tuples(df.columns.str.split(', ').map(lambda x: tuple(x)), name=[None, None])
-        df.index = pd.Index(metrics['description'].to_list(), name=None)
+        df.index = pd.Index(metrics['name'].to_list(), name=None)
         groups = pd.Index(df.columns.get_level_values(0).to_list() + df.columns.get_level_values(1).to_list()
                           ).drop_duplicates()
 
-    style = df.style.applymap_index(lambda
-                                        group: f'color: white; background-color: {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; opacity: {opacity}',
-                                    axis=axis, level=0).applymap_index(lambda
-                                                                           group: f'color: white; background-color: {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; opacity: {opacity}',
+    style = df.style.map_index(lambda
+                                   group: f'color: white; background-color: {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; opacity: {opacity}',
+                               axis=axis, level=0).map_index(lambda
+                                                                             group: f'color: white; background-color: {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; opacity: {opacity}',
                                                                        axis=axis, level=1).set_caption(
         caption).set_table_styles([
         {'selector': 'caption', 'props': f'font-size:{caption_font_size}pt; text-align:center; color:black'},
@@ -896,8 +897,8 @@ def display_confidence_interval_overlapping(values, axis=0, metrics=None, captio
         {'selector': '.row_heading, td', 'props': f'width: {index_width}px; text-align: center;'},
         {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center;'}
     ], overwrite=False) \
-        .applymap_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=0) \
-        .applymap_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=1) \
+        .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=0) \
+        .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=1) \
         .applymap(lambda x: f'color: red; font-weight: bold;' if x == 'Нет' else None)
 
     if df.axes[axis].size == 1:
@@ -918,18 +919,18 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
     Для каждой метрики создается отдельное полотно. Полотно можно распередить на несколько столбцов.
     В каждом полотне строится несколько гистограмм для каждой группы.
     Дополнительно над гистограммами можно разместить boxplot'ы для каждой группы,
-    аналогично тому как это делает функция px.histogram при укзании параметра margin равным boxplot. 
-    Еще одной опцией является возможность построения ядерных оценок распределения (KDE) 
+    аналогично тому как это делает функция px.histogram при укзании параметра margin равным boxplot.
+    Еще одной опцией является возможность построения ядерных оценок распределения (KDE)
     для каждой группы на одном полотне с гистограммами. Построение KDE возможно только при построении
     гистограмм плотности вероятности (probability density).
 
     Параметры:
     ----------
-    data : DataFrame или Series 
+    data : DataFrame или Series
         Выборка данных, для которой рассчитываются границы доверительного интервала.
         При использовании Series может быть передан набор данных только одной метрики.
         При необходимости расчёта ДИ для наборов нескольких метрик одинакового размера
-        следует использовать DataFrame. При этом наборы данных метрик должны распологаться
+        следует использовать DataFrame. При этом наборы данных метрик должны располагаться
         в отдельных столбцах.
 
     metrics : DataFrame
@@ -939,7 +940,7 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
         Заголовок диаграммы
 
     title_y : float или None
-        Относительное положение заголовока диаграммы по высоте (от 0.0 (внизу) до 1.0 (вверху))
+        Относительное положение заголовка диаграммы по высоте (от 0.0 (внизу) до 1.0 (вверху))
 
     yaxis_title : string или None. По умолчанию - None
         Заголовок оси y
@@ -975,7 +976,7 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
         Уровень непрозрачности (от 0.0 до 1.0) цвета столбцов
 
     histnorm : {'percent', 'probability', 'density' или 'probability density'} или None. По умолчанию - 'percent'
-        Тип гистораммы (см. plotly.express.histogram)
+        Тип гистограммы (см. plotly.express.histogram)
 
     boxplot_height_fraq : float. По умолчанию - 0.25
         Доля высоты boxplot. Используется только, если add_boxplot=True
@@ -1000,7 +1001,7 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
         Отметить статистику на гистограмму в виде вертикальной штриховой линии.
 
     mark_statistic : {'tomin', 'tomax', 'tonearest'}. По умолчанию - False
-        Закрасить область KDE слева ('tomin') или справа ('tomax'), 
+        Закрасить область KDE слева ('tomin') или справа ('tomax'),
         или минимальную ('min') или максимальную ('max') по размеру в цвет гистограммы с половинной прозрачностью.
 
     statistic : Series
@@ -1070,7 +1071,7 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
                           bingroup=index + 1,
                           marker_color=px.colors.DEFAULT_PLOTLY_COLORS[index],
                           marker_line_color='white', marker_line_width=1,
-                          opacity=opacity, showlegend=False, name=metrics.loc[metric, 'description'])
+                          opacity=opacity, showlegend=False, name=metrics.loc[metric, 'name'])
         # К гистограмме добавляем KDE
         if add_kde and histnorm == 'probability density':
             special_points = None
@@ -1088,17 +1089,17 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
             metric_kde.sort_values(['value'], inplace=True)
             fig.add_scatter(x=metric_kde['value'], y=metric_kde['pdf'], row=row + (1 if add_boxplot else 0), col=col,
                             mode='lines', marker_color=px.colors.DEFAULT_PLOTLY_COLORS[index], marker_line_width=1,
-                            opacity=opacity, showlegend=False, name=metrics.loc[metric, 'description'])
+                            opacity=opacity, showlegend=False, name=metrics.loc[metric, 'name'])
             if mark_confidence_interval:
                 df = metric_kde[metric_kde['value'] <= confidence_interval['low']]
                 fig.add_scatter(x=df['value'], y=df['pdf'], row=row + (1 if add_boxplot else 0), col=col, mode='lines',
                                 marker_color=px.colors.DEFAULT_PLOTLY_COLORS[index], marker_line_width=1,
-                                opacity=opacity, name=metrics.loc[metric, 'description'],
+                                opacity=opacity, name=metrics.loc[metric, 'name'],
                                 showlegend=False, fill='tozeroy')
                 df = metric_kde[metric_kde['value'] >= confidence_interval['high']]
                 fig.add_scatter(x=df['value'], y=df['pdf'], row=row + (1 if add_boxplot else 0), col=col, mode='lines',
                                 marker_color=px.colors.DEFAULT_PLOTLY_COLORS[index], marker_line_width=1,
-                                opacity=opacity, name=metrics.loc[metric, 'description'],
+                                opacity=opacity, name=metrics.loc[metric, 'name'],
                                 showlegend=False, fill='tozeroy')
             if mark_statistic is not None and statistic is not None:
                 if mark_statistic[metric] == 'tomin':
@@ -1117,7 +1118,7 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
                         df = metric_kde[metric_kde['value'] <= statistic[metric]]
                 fig.add_scatter(x=df['value'], y=df['pdf'], row=row + (1 if add_boxplot else 0), col=col, mode='lines',
                                 marker_color=px.colors.DEFAULT_PLOTLY_COLORS[index], marker_line_width=1,
-                                opacity=opacity, name=metrics.loc[metric, 'description'],
+                                opacity=opacity, name=metrics.loc[metric, 'name'],
                                 showlegend=False, fill='tozeroy')
             if add_statistic and statistic is not None:
                 # Добавляем статистику
@@ -1127,7 +1128,7 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
         if add_boxplot:
             # Добавляем \"ящик с усами\" над гистограммой
             fig.add_box(x=data[metric], row=row, col=col, marker_color=px.colors.DEFAULT_PLOTLY_COLORS[index],
-                        line_width=1, name=metrics.loc[metric, 'description'],
+                        line_width=1, name=metrics.loc[metric, 'name'],
                         boxmean=add_mean, showlegend=False)
             # У \"ящиков с усами\" устанавливаем  такой же диапазон значений по оси x как у гисторграмм,
             # показываем сетку по оси x, но скрываем на ней метки

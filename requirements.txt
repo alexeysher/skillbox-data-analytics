@@ -1,6 +1,0 @@
-streamlit
-streamlit_option_menu
-pandas
-plotly
-scipy
-statsmodels

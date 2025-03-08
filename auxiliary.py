@@ -1,12 +1,11 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import textwrap
 
 
 class MegafonColors:
-    '''
+    """
     Megafon brand colors
-    '''
+    """
     base = '#FFF'
     content = '#333'
     brandGreen = '#00b956'
@@ -24,7 +23,7 @@ class MegafonColors:
     orangeDark = '#e39338'
 
 def wrap_text(text, length=50):
-    '''
+    """
     Splits the text into lines of a given length and replaces line breaks with the HTML element <br>
 
         Parameters:
@@ -38,15 +37,15 @@ def wrap_text(text, length=50):
         Return:
         -----------------------
             Object of type string.
-    '''
+    """
     return textwrap.fill(text, length).replace('\n', '<br>')
 
 
 def set_text_style(text: str, tag: str = 'p', font_family: str = None, font_size: int = None,
                    color: str = None, background_color: str = None, text_align: str = None):
-    '''
+    """
     Returns HTML-tag for given text with specified format.
-    '''
+    """
     variables = []
     if font_family is not None:
         variables.append(f'font-family: {font_family}')
@@ -65,9 +64,9 @@ def set_text_style(text: str, tag: str = 'p', font_family: str = None, font_size
 
 def set_widget_style(widget_text, font_family: str = None, font_size: int = None,
                      color: str = None, background_color: str = None, text_align: str = None):
-    '''
+    """
     Sets the style of the widget containing the specified text.
-    '''
+    """
     html = \
         """
     <script>
@@ -106,38 +105,3 @@ def set_widget_style(widget_text, font_family: str = None, font_size: int = None
     </script> 
     """
     components.html(html, height=0, width=0)
-
-
-def hide_menu_button():
-    """
-    Hides the menu button.
-    """
-    st.markdown(
-        """
-        <style>
-            MainMenu {visibility: hidden;}
-            header {visibility: hidden;}
-            footer {visibility: hidden;}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-def remove_blank_space():
-    """
-    Removes white space at the top of the page.
-    """
-    st.markdown(f'''
-                <style>
-                    .css-k1ih3n {{
-                        padding-top: 1.5rem;
-                    }}
-                </style>
-                <style>
-                    .css-1vq4p4l {{
-                        padding-top: 4.0rem;
-                    }}
-                </style>
-                ''', unsafe_allow_html=True,
-                )

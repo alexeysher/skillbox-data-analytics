@@ -47,26 +47,37 @@ def load_data() -> [pd.DataFrame]:
             'Neutral' if q1 <= 6 else ('Satisfied' if q1 <= 8 else 'Very satisfied'))))
     # Добавляем информацию о причине неудовлетворенности сервисом мобильного интернета
     data_clean['Dissatisfaction reasons'] = data_clean['Q2'].apply(
-        lambda q2: 'Internet and video' if q2.find('4, 5') >= 0 else (
+        lambda q2: 'Internet and Video' if q2.find('4, 5') >= 0 else (
             'Internet' if q2.find('4') >= 0 else (
                 'Video' if q2.find('5') >= 0 else 'No')))
     # Сортируем данные так, чтобы причины неудовлетворенности располагались в обозначенном поряке
     data_clean.sort_values(['Q1', 'Q2'],
                            key=lambda x: x if x.name == 'Q1' else (x.str.contains('5') - x.str.contains('4, 5') * 2),
                            inplace=True)
-    metrics = pd.DataFrame({
-        'description': ["Объем трафика передачи данных",
-                        "Средняя скорость «к абоненту»",
-                        "Средняя скорость «от абонента»",
-                        "Частота переотправок пакетов «к абоненту»",
-                        "Скорость загрузки потокового видео",
-                        "Задержка старта воспроизведения видео",
-                        "Скорость загрузки web-страниц через браузер",
-                        "Пинг при просмотре web-страниц"],
-        'units': ["МБ", "кбит/с", "кбит/с", "%", "кбит/с", "мс", "кбит/с", "мс"],
-        'impact': ['0', '+', '-', '+', '+', '-', '+', '-']
-    }, index=pd.Index(data.columns.drop(['Q1', 'Q2']), name='metric'))
-    metrics['label'] = metrics['description'].apply(lambda d: '<b>' + wrap_text(d, 30) + '</b>')
+    metrics = pd.DataFrame(
+        columns=['name', 'units', 'impact'],
+        index=pd.Index(data.columns.drop(['Q1', 'Q2']), name='metric')
+    )
+
+    for metric in metrics.index:
+        name, units = metric[:-1].split('(')
+        label = '<b>' + wrap_text(name, 50) + '</b>'
+        metrics.loc[metric, ['name', 'units', 'label']] = name, units, label
+
+    metrics.loc['Total Traffic(MB)', 'impact'
+    ] = '0'
+
+    metrics.loc[
+        ['Downlink Throughput(Kbps)', 'Uplink Throughput(Kbps)',
+         'Video Streaming Download Throughput(Kbps)',
+         'Web Page Download Throughput(Kbps)'], 'impact'
+    ] = '+'
+
+    metrics.loc[
+        ['Downlink TCP Retransmission Rate(%)',
+         'Video Streaming xKB Start Delay(ms)',
+         'Web Average TCP RTT(ms)'], 'impact'
+    ] = '-'
     return data, data_clean, metrics
 
 
@@ -77,7 +88,7 @@ def plot_csat_dist_10(data: pd.DataFrame):
                       marker_color=px.colors.DEFAULT_PLOTLY_COLORS)
     fig.update_layout(font_family="Calibri", font_color=MegafonColors.scantBlue2, font_size=14,
                       # title=None, title_x=0.5, title_y=0.91, title_xanchor='center',
-                      # title_font_size=18, title_font_color=MegafonColors.scantBlue2,
+                      # title_font_size=20, title_font_color=MegafonColors.scantBlue2,
                       height=400,
                       bargap=0.2, margin_l=0, margin_r=0, margin_b=0, margin_t=0)
     fig.update_xaxes(title='', tickvals=data['Q1'].sort_values().unique(),
@@ -95,7 +106,7 @@ def plot_csat_dist_5(data: pd.DataFrame):
                       marker_color=px.colors.DEFAULT_PLOTLY_COLORS)
     fig.update_layout(font_family="Calibri", font_color=MegafonColors.content, font_size=14,
                       # title='5-бальная шкала', title_x=0.5, title_y=0.91, title_xanchor='center',
-                      # title_font_size=18, title_font_color=MegafonColors.scantBlue2,
+                      # title_font_size=20, title_font_color=MegafonColors.scantBlue2,
                       height=400,
                       bargap=0.2, margin_l=0, margin_r=0, margin_b=0, margin_t=0)
     fig.update_xaxes(title='', title_font_color=MegafonColors.brandPurple, tickfont_size=14)
@@ -106,11 +117,11 @@ def plot_csat_dist_5(data: pd.DataFrame):
 @st.cache_resource
 def plot_reason_dist(data: pd.DataFrame):
     s = pd.Series(index=[
-        "0 - Unknown", "1 - Недозвоны, обрывы при звонках",
-        "2 - Время ожидания гудков при звонке",
-        "3 -  качество связи в зданиях, торговых центрах и т.п.",
+        "0 - Unknown", "1 - Missed calls, disconnected calls",
+        "2 - Waiting time for ringtones",
+        "3 - Poor connection quality in buildings, shopping centers, etc.",
         "4 - Slow mobile Internet", "5 - Slow video loading",
-        "6 - Затрудняюсь ответить", "7 - Свой вариант"
+        "6 - Difficult to answer", "7 - Your own option"
     ], dtype=float)
     s.index = s.index.map(lambda x: wrap_text(x, 40))
     for index in range(s.size):
@@ -122,7 +133,7 @@ def plot_reason_dist(data: pd.DataFrame):
                       marker_color=px.colors.DEFAULT_PLOTLY_COLORS)
     fig.update_layout(font_family="Calibri", font_color=MegafonColors.brandPurple, font_size=14,
                       # title='Исходные', title_x=0.5, title_y=0.95, title_xanchor='center',
-                      # title_font_size=18, title_font_color=MegafonColors.scantBlue2,
+                      # title_font_size=20, title_font_color=MegafonColors.scantBlue2,
                       showlegend=False, height=450,
                       bargap=0.3, margin_l=0, margin_r=0, margin_t=0, margin_b=0)
     fig.update_xaxes(title='', title_font_color=MegafonColors.brandPurple, tickfont_size=16)
@@ -135,7 +146,7 @@ def plot_reason_combo_dist(data: pd.DataFrame):
     s = pd.Series(dtype=float)
     s.loc["0, 6, 7 - Unknown"] = (data['Q2'].str.contains('[067]', regex=True) & (data['Q1'] <= 8)).sum()
     s.loc["1, 2 - Voice communication"] = data['Q2'].str.contains('[12]', regex=True).sum()
-    s.loc["3 - Coverage area"] = data['Q2'].str.contains('3').sum()
+    s.loc["3 - Coverage"] = data['Q2'].str.contains('3').sum()
     s.loc["4, 5 - Mobile Internet"] = data['Q2'].str.contains('[45]', regex=True).sum()
     s = s / s.sum() * 100
 
@@ -144,7 +155,7 @@ def plot_reason_combo_dist(data: pd.DataFrame):
                       marker_color=px.colors.DEFAULT_PLOTLY_COLORS)
     fig.update_layout(font_family="Calibri", font_color=MegafonColors.brandPurple, font_size=16,
                       # title='Объединенные', title_x=0.5, title_y=0.95, title_xanchor='center',
-                      # title_font_size=18, title_font_color=MegafonColors.scantBlue2,
+                      # title_font_size=20, title_font_color=MegafonColors.scantBlue2,
                       showlegend=False, height=250,
                       bargap=0.3, margin_l=0, margin_r=0, margin_t=0, margin_b=0)
     fig.update_xaxes(title='', title_font_color=MegafonColors.brandPurple, tickfont_size=16)
@@ -153,15 +164,15 @@ def plot_reason_combo_dist(data: pd.DataFrame):
 
 
 @st.cache_resource
-def show_metric_table(metrics: pd.DataFrame):
+def show_metric_impact_table(metrics: pd.DataFrame):
     metrics = metrics.reset_index()
     # metrics.index.rename('Метрика', inplace=True)
-    # style = metrics.style.set_caption('ddd').set_properties({'font-size': '16px'})
+    # style = metrics.style.set_caption('ddd').set_properties({'font-size': '20px'})
     header = f''
     table = \
         f'| {set_text_style("Metric", tag="span", text_align="center")} ' \
         f'| {set_text_style("Impact", tag="span", text_align="center")} |\n' \
-        f'|---------|----------|:--------:|:-------:|\n'
+        f'|---------|:-------:|\n'
     for _, (metric, impact) \
             in metrics[['metric', 'impact']].iterrows():
         if impact == '+':
@@ -175,12 +186,22 @@ def show_metric_table(metrics: pd.DataFrame):
     return table
 
 
+@st.cache_resource
+def show_metric_impact_legend():
+    # legend = '|    |    |\n'
+    legend = '| Marker | Description |\n'
+    legend += '|:--:|----|\n'
+    legend += '| ─ | Neurtal |\n'
+    legend += f'|{set_text_style('▲', tag='span', color=MegafonColors.brandGreen)}| The higher, the better|\n'
+    legend += f'|{set_text_style('▼', tag='span', color='red')}| The lower, the better |'
+    return legend
+
+
 config.dataFrameSerialization = "arrow"
 
 st.set_page_config(page_title='Research of MegaFon (large mobile and telecom operator) customer success survey',
                    page_icon='bar-chart', layout='wide')
-# hide_menu_button()
-remove_blank_space()
+
 
 data, data_clean, metrics = load_data()
 research_metrics = metrics.loc[[
@@ -198,14 +219,15 @@ with st.sidebar:
     choice = option_menu(
         '',
         options=[
+            "Title",
             "Introduction",
             "Data preparation and exploratory analysis",
-            "Постановка цели",
+            "Setting the objectives",
             "Selection of metrics, statistics and criteria",
-            "Reasons for dissatisfaction with mobile internet service",
-            "Оценки качества сервиса мобильного интернета",
-            "Уровни удовлетворенности сервисом мобильного интернета",
-            "Влияние метрик на уровень удовлетворенности",
+            "Reasons for dissatisfaction with mobile Internet service",
+            "Mobile Internet service quality assessments",
+            "CSAT of mobile Internet service",
+            "Influence of the metrics on the CSAT of mobile Internet service",
             "---",
             "Summary"
         ],
@@ -226,49 +248,126 @@ with st.sidebar:
     )
 
 match choice:
-    case "Introduction":
+    case "Title":
         plain_text = "Research of MegaFon customer success survey"
         font_formatted_text = f'**{set_text_style(plain_text, font_size=80, color=MegafonColors.brandPurple)}**'
         st.markdown(font_formatted_text, unsafe_allow_html=True)
-        font_formatted_text = set_text_style('&nbsp;', font_size=32)
+        font_formatted_text = set_text_style('&nbsp;', font_size=24)
         st.markdown(font_formatted_text, unsafe_allow_html=True)
         author = set_text_style('Author: ', font_size=48, color=MegafonColors.brandGreen, tag='span') + \
                  set_text_style('**Alexey Sherstobitov**', font_size=48, color=MegafonColors.brandGreen, tag='span')
         st.markdown(author, unsafe_allow_html=True)
+    case "Introduction":
+        plain_text = "<b>Problem statement</b>"
+        font_formatted_text = f'**{set_text_style(
+            plain_text, font_size=24, 
+            color=MegafonColors.brandPurple
+        )}**'
+        st.markdown(font_formatted_text, unsafe_allow_html=True)
+        plain_text = """
+        <a href="https://en.wikipedia.org/wiki/MegaFon">Megafon</a> is a large mobile phone and telecom operator.
+        Like any business, this company wants to increase customer satisfaction with its service quality.
+        """
+        font_formatted_text = set_text_style(plain_text, tag='p', font_size=20)
+        st.html(font_formatted_text)
+        plain_text = """
+        For this reason, the company have managed a short customers survey.  
+        First of all, the customers were asked to score their satisfaction for communication service quality 
+        on 10-point scale (10 - excellent, 1 - terrible)."""
+        font_formatted_text = set_text_style(plain_text, tag='p', font_size=20)
+        st.html(font_formatted_text)
+        plain_text = """        
+        If the customer score the quality of communication at 9 or 10 points, the survey ended. 
+        If the customer score it below 9, a second question was asked about the reasons for dissatisfaction.
+        For the second question the numbered answer options were provided:"""
+        font_formatted_text = set_text_style(plain_text, tag='p', font_size=20)
+        st.html(font_formatted_text)
+        plain_text = """        
+        <li>Unknown</li>
+        <li>Missed calls, disconnected calls</li>
+        <li>Waiting time for ringtones</li>
+        <li>Poor connection quality in buildings, shopping centers, etc.</li>
+        <li>Slow mobile Internet</li>
+        <li>Slow video loading</li>
+        <li>Difficult to answer</li>
+        <li>Your own option</li>
+        """
+        font_formatted_text = set_text_style(plain_text, tag='ol start="0"', font_size=20)
+        st.html(font_formatted_text)
+        plain_text = """        
+        The answer could be given in a free format or by listing the answer numbers separated by commas."""
+        font_formatted_text = set_text_style(plain_text, tag='p', font_size=20)
+        st.html(font_formatted_text)
     case "Data preparation and exploratory analysis":
-        tabs = ['1st question answers', '2nd question answers', 'Metric values']
+        tabs = ['Answers for the 1st question', 'Answers for the 2nd question', 'Metric values']
         tab1, tab2, tab3 = st.tabs(tabs)
         for tab in tabs:
             set_widget_style(tab, font_size=24)
         with tab1:
             st.markdown(
-                set_text_style('<b>Distribution of customers by quality satisfaction scores</b>',
-                               font_size=24, text_align='center',
-                               # color=MegafonColors.brandPurple
-                               ),
+                set_text_style(
+                    '<b>Distribution of customers by quality satisfaction scores</b>',
+                    font_size=24, text_align='center', color=MegafonColors.brandPurple
+                ),
                 unsafe_allow_html=True
             )
-            c1, c2 = st.columns([64, 36], gap='medium')
+            c1, c2, c3 = st.columns([54, 16, 30], gap='medium')
             with c1:
-                col_title = set_text_style('<b>✘</b> ', tag='span', color='red') + '10-score scale'
-                col_title = set_text_style(col_title, font_size=24, text_align='center')
+                col_title = set_text_style('<b>✘</b> ', tag='span', color='red') + 'Initial (10-score scale)'
+                col_title = set_text_style(col_title, font_size=20, text_align='center')
                 st.markdown(col_title, unsafe_allow_html=True)
                 fig = plot_csat_dist_10(data)
                 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
+                # conclusion = set_text_style(
+                #     """The distribution doesn't look smooth and balanced.
+                #     It indicates that customers probably had a difficulty with the scoring on this scale.""",
+                #     font_size=20
+                # )
+                # st.markdown(conclusion, unsafe_allow_html=True)
             with c2:
-                col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + '5-score scale'
-                col_title = set_text_style(col_title, font_size=24, text_align='center')
+                conclusion = set_text_style(
+                    """<br><br><br><br>Converting scores to 5-point scale""",
+                    font_size=20
+                )
+                st.markdown(conclusion, unsafe_allow_html=True)
+                col_title = set_text_style('<b>►</b> ', tag='span')
+                col_title = set_text_style(col_title, font_size=64, text_align='center')
+                st.markdown(col_title, unsafe_allow_html=True)
+            with c3:
+                col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + \
+                            'Modified (5-score scale)'
+                col_title = set_text_style(col_title, font_size=20, text_align='center')
                 st.markdown(col_title, unsafe_allow_html=True)
                 fig = plot_csat_dist_5(data)
                 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
+                # conclusion = set_text_style(
+                #     """The distribution looks much more probable""",
+                #     font_size=20
+                # )
+                # st.markdown(conclusion, unsafe_allow_html=True)
+
+            st.markdown(
+                set_text_style(
+                    '<b>Observation</b>',
+                    font_size=24, text_align='center', color=MegafonColors.orangeDark
+                ),
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                set_text_style(
+                    'The scores distribution on 5-point scale looks much more probable.',
+                    font_size=20
+                ),
+                unsafe_allow_html=True
+            )
         with tab2:
             st.markdown(
                 set_text_style('<b>Distribution of reasons for quality dissatisfaction</b>',
-                               # color=MegafonColors.brandPurple,
+                               color=MegafonColors.brandPurple,
                                font_size=24, text_align='center'),
                 unsafe_allow_html=True
             )
-            c1, c2 = st.columns([53, 47], gap='medium')
+            c1, c2, c3 = st.columns([45, 16, 39], gap='medium')
             with c1:
                 col_title = set_text_style('<b>✘</b> ', tag='span', color='red') + 'Initial'
                 col_title = set_text_style(col_title, font_size=20, text_align='center')
@@ -276,22 +375,53 @@ match choice:
                 fig = plot_reason_dist(data)
                 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             with c2:
+                conclusion = set_text_style(
+                    """<br><br><br><br>Grouping by services""",
+                    font_size=20
+                )
+                st.markdown(conclusion, unsafe_allow_html=True)
+                col_title = set_text_style('<b>►</b> ', tag='span')
+                col_title = set_text_style(col_title, font_size=64, text_align='center')
+                st.markdown(col_title, unsafe_allow_html=True)
+            with c3:
                 col_title = set_text_style('<b>✔</b> ', tag='span', color=MegafonColors.brandGreen) + 'Combined'
                 col_title = set_text_style(col_title, font_size=20, text_align='center')
                 st.markdown(col_title, unsafe_allow_html=True)
                 fig = plot_reason_combo_dist(data)
                 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
-        with tab3:
-            st.markdown(set_text_style('<b>Probability density distribution of metrics in the observed sample</b>',
-                                       font_size=24, text_align='center'),
-                        unsafe_allow_html=True
-                        )
-            metrics_table = show_metric_table(metrics)
-            st.markdown(metrics_table, unsafe_allow_html=True)
-            st.markdown('---')
             st.markdown(
-                set_text_style('<b>Probability density distribution of metrics in the observed sample</b>',
-                               # color=MegafonColors.brandPurple,
+                set_text_style(
+                    '<b>Observation</b>',
+                    font_size=24, text_align='center', color=MegafonColors.orangeDark
+                ),
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                set_text_style(
+                    'Answers are distributed into approximately equal parts. '
+                    'About 1/4 of the customers are unsatisfied with voice communication, '
+                    'mobile Internet or coverage.',
+                    tag='ul',
+                    font_size=20
+                ),
+                unsafe_allow_html=True
+            )
+        with tab3:
+            # st.markdown(
+            #     set_text_style('<b>Impact of the metrics to the quality of mobile Internet service</b>',
+            #                    font_size=24, text_align='center', color=MegafonColors.brandPurple),
+            #     unsafe_allow_html=True)
+            # metrics_table = show_metric_impact_table(metrics)
+            # c1, c2 = st.columns([53, 47], gap='medium')
+            # with c1:
+            #     st.markdown(metrics_table, unsafe_allow_html=True)
+            # with c2:
+            #     legend = show_metric_impact_legend()
+            #     st.markdown(legend, unsafe_allow_html=True)
+            # st.markdown('---')
+            st.markdown(
+                set_text_style('<b>Probability density distribution and box plot</b>',
+                               color=MegafonColors.brandPurple,
                                font_size=24, text_align='center'),
                 unsafe_allow_html=True
             )
@@ -299,26 +429,49 @@ match choice:
                 data[metrics.index], metrics,
                 # title='<b>Плотность распределения вероятностей метрик в наблюдаемой выборке</b>',
                 # title_y=0.95, title_font_size=24,
-                labels_font_size=18,
+                labels_font_size=20,
                 axes_tickfont_size=14,
                 height=900, boxplot_height_fraq=0.15, n_cols=3, opacity=0.5,
                 histnorm='probability density',
                 add_boxplot=True, add_kde=True, add_mean=True,
                 horizontal_spacing=0.07, vertical_spacing=0.15)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
-    case "Goals settings":
-        tabs = ['Objective of the research',
-                'Initial categories',
-                'Distribution map']
-        tab1, tab2, tab3 = st.tabs(tabs)
+            st.markdown(
+                set_text_style(
+                    '<b>Observation</b>',
+                    font_size=24, text_align='center', color=MegafonColors.orangeDark
+                ),
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                set_text_style(
+                    '''
+                        <li>The distributions of all metrics except Total traffic are strongly skewed to the right and have a very long thin "tail"</li>
+                        <li>The distributions of all metrics are far from "normal"</li>
+                        <li>A lot of values on the right are located far from the rest, which raises questions about their reliability (these may be the so-called "outliers")</li>
+                    ''',
+                    tag='ul',
+                    font_size=20
+                ),
+                unsafe_allow_html=True
+            )
+    case "Setting the objectives":
+        tabs = ['Objectives of the research',
+                'Initial customers classification']
+        tab1, tab2 = st.tabs(tabs)
         for tab in tabs:
             set_widget_style(tab, font_size=24)
         with tab1:
-            st.markdown(set_text_style('<b>Цель</b>', font_size=32, text_align='center',
-                                       color=MegafonColors.orangeDark), unsafe_allow_html=True)
-            st.markdown(set_text_style('Классифицировать пользователей в разрезе их отношения к качеству '
-                                       'сервиса мобильного интернета', font_size=24),
-                        unsafe_allow_html=True)
+            st.markdown(set_text_style('<b>Objectives</b>', font_size=24, text_align='center',
+                                       color=MegafonColors.brandPurple), unsafe_allow_html=True)
+            st.markdown(
+                set_text_style(
+                    '''
+                    <li>Classify customers according to their assessment of the quality of mobile Internet service.</li>
+                    <li>Determine witch metrics have the strongest influence to the customers assessment.</li> 
+                    ''',
+                    tag='ul', font_size=20),
+                unsafe_allow_html=True)
             st.markdown('&nbsp;')
             df = pd.DataFrame(
                 index=[
@@ -330,33 +483,33 @@ match choice:
                 ],
                 columns=pd.RangeIndex(1, 11)
             )
-            df.loc[("4 - Slow mobile Internet", "5 -  Slow video loading"), :] = '+'
+            df.loc[("4 - Slow mobile Internet", "5 - Slow video loading"), :] = '+'
             df.loc[:, (9, 10)] = '+'
             df.fillna('-', inplace=True)
             s = df.style
             s.set_table_styles([
                 # {'selector': 'th, td', 'props': 'border: 1px solid lightgray;'},
                 {'selector': 'th:not(.blank)',
-                 'props': f'font-size: 16px; color: white; background-color: {MegafonColors.brandPurple80};'},
+                 'props': f'font-size: 20px; color: white; background-color: {MegafonColors.brandPurple80}; font-weight: normal;'},
                 {'selector': 'th.col_heading', 'props': 'text-align: center; width: 50px;'},
-                {'selector': 'td', 'props': 'text-align: center; font-size: 16px; font-weight: bold;'},
+                {'selector': 'td', 'props': 'text-align: center; font-size: 20px; font-weight: normal;'},
                 {'selector': 'th.blank', 'props': 'border-style: none'}
             ], overwrite=False)
-            s = s.applymap(lambda v:
-                           f'color: white; background-color: {MegafonColors.brandGreen};' if v == '+'
-                           else f'color: {MegafonColors.spbSky2}; background-color: {MegafonColors.spbSky1};')
+            s = s.map(lambda v:
+                      f'color: white; background-color: {MegafonColors.brandGreen};' if v == '+'
+                      else f'color: {MegafonColors.spbSky2}; background-color: {MegafonColors.spbSky1};')
             st.markdown(s.to_html(table_uuid="table_client_choosing"), unsafe_allow_html=True)
         with tab2:
             c1, c2 = st.columns(2, gap='large')
             with c1:
-                st.markdown(set_text_style('<b>Категории оценки сервиса мобильного интернета</b>', font_size=32,
+                st.markdown(set_text_style('<b>Categories of CSAT according to Q1 answer</b>', font_size=24,
                                            text_align='center', color=MegafonColors.brandPurple),
                             unsafe_allow_html=True)
                 df = pd.DataFrame(
-                    index=["Ужасно", "Unsatisfied", "Neutral", "Satisfied", "Very satisfied"],
+                    index=["Very unsatisfied", "Unsatisfied", "Neutral", "Satisfied", "Very satisfied"],
                     columns=pd.RangeIndex(1, 11)
                 )
-                df.loc["Ужасно", (1, 2)] = '+'
+                df.loc["Very unsatisfied", (1, 2)] = '+'
                 df.loc["Unsatisfied", (3, 4)] = '+'
                 df.loc["Neutral", (5, 6)] = '+'
                 df.loc["Satisfied", (7, 8)] = '+'
@@ -366,54 +519,58 @@ match choice:
                 s.set_table_styles([
                     # {'selector': 'th, td', 'props': 'border: 1px solid lightgray;'},
                     {'selector': 'th:not(.blank)',
-                     'props': f'font-size: 16px; color: white; background-color: {MegafonColors.brandPurple80};'},
+                     'props': f'font-size: 20px; color: white; background-color: {MegafonColors.brandPurple80}; font-weight: normal;'},
                     {'selector': 'th.col_heading', 'props': 'text-align: center; width: 50px;'},
-                    {'selector': 'td', 'props': 'text-align: center; font-size: 16px; font-weight: bold;'},
+                    {'selector': 'td', 'props': 'text-align: center; font-size: 20px; font-weight: normal;'},
                     {'selector': 'th.blank', 'props': 'border-style: none'}
                 ], overwrite=False)
-                s = s.applymap(lambda v:
-                               f'color: white; background-color: {MegafonColors.brandGreen};' if v == '+'
-                               else f'color: {MegafonColors.spbSky2}; background-color: {MegafonColors.spbSky1};')
+                s = s.map(lambda v:
+                          f'color: white; background-color: {MegafonColors.brandGreen};' if v == '+'
+                          else f'color: {MegafonColors.spbSky2}; background-color: {MegafonColors.spbSky1};')
                 st.markdown(s.to_html(table_uuid="table_categories_1"), unsafe_allow_html=True)
             with c2:
-                st.markdown(set_text_style('<b>Категории причин недовольства сервисом мобильного интернета</b>',
-                                           font_size=32, text_align='center', color=MegafonColors.brandPurple),
-                            unsafe_allow_html=True)
+                st.markdown(
+                    set_text_style(
+                        '<b>Categories of reasons for dissatisfaction with the quality of mobile Internet service '
+                        'according to Q2 aswers</b>',
+                        font_size=24, text_align='center', color=MegafonColors.brandPurple),
+                        unsafe_allow_html=True)
                 df = pd.DataFrame(
-                    index=["Интернет и видео", "Интернет", "Видео", "Нет"],
+                    index=["Internet and Video", "Internet", "Video", "No"],
                     columns=[
                         "4 - Slow mobile Internet", "5 - Slow video loading",
                     ]
                 )
-                df.loc["Интернет и видео", ("4 - Slow mobile Internet", "5 - Slow video loading")] = '+'
-                df.loc["Интернет", "4 - Slow mobile Internet"] = '+'
-                df.loc["Видео", "5 - Slow video loading"] = '+'
+                df.loc["Internet and Video", ("4 - Slow mobile Internet", "5 - Slow video loading")] = '+'
+                df.loc["Internet", "4 - Slow mobile Internet"] = '+'
+                df.loc["Video", "5 - Slow video loading"] = '+'
                 df.fillna('-', inplace=True)
                 s = df.style
                 s.set_table_styles([
                     # {'selector': 'th, td', 'props': 'border: 1px solid lightgray;'},
                     {'selector': 'th:not(.blank)',
-                     'props': f'font-size: 16px; color: white; background-color: {MegafonColors.brandPurple80};'},
-                    {'selector': 'th.col_heading', 'props': 'text-align: center; width: 200px;'},
-                    {'selector': 'td', 'props': 'text-align: center; font-size: 16px; font-weight: bold;'},
+                     'props': f'font-size: 20px; color: white; background-color: {MegafonColors.brandPurple80}; font-weight: normal;'},
+                    {'selector': 'th.col_heading', 'props': 'text-align: center; width: 240px;'},
+                    {'selector': 'td', 'props': 'text-align: center; font-size: 20px; font-weight: normal;'},
                     {'selector': 'th.blank', 'props': 'border-style: none'}
                 ], overwrite=False)
-                s = s.applymap(lambda v:
-                               f'color: white; background-color: {MegafonColors.brandGreen};' if v == '+'
-                               else f'color: {MegafonColors.spbSky2}; background-color: {MegafonColors.spbSky1};')
+                s = s.map(lambda v:
+                          f'color: white; background-color: {MegafonColors.brandGreen};' if v == '+'
+                          else f'color: {MegafonColors.spbSky2}; background-color: {MegafonColors.spbSky1};')
                 st.markdown(s.to_html(table_uuid="table_categories_2"), unsafe_allow_html=True)
-        with tab3:
             st.markdown('&nbsp;')
+            st.markdown(set_text_style('<b>Distribution of customers</b>', font_size=24,
+                                       text_align='center', color=MegafonColors.brandPurple),
+                        unsafe_allow_html=True)
             s = display_cat_info(data_clean)
             st.markdown(s.to_html(table_uuid="table_categories_dist"), unsafe_allow_html=True)
-
-    case "Reasons for dissatisfaction with mobile internet service":
+    case "Selection of metrics, statistics and criteria":
 
         @st.cache_resource
         def show_important_metric_table(metrics: pd.DataFrame):
             df = metrics.loc[
                 ['Downlink Throughput(Kbps)', 'Video Streaming Download Throughput(Kbps)',
-                'Web Page Download Throughput(Kbps)'], ['description']
+                'Web Page Download Throughput(Kbps)'], ['name']
             ]
             return df.style
 
@@ -438,93 +595,104 @@ match choice:
                 .apply(lambda s: my_bootstrap(s, research_metrics.loc[s.name, 'statistic'], n_resamples=9999))
 
 
-        tabs = ['Метрики и статистика',
-                'Критерии и уровень значимости',
-                ]
+        tabs = ['Metrics and statistics',
+                'Criteria and significance level']
         tab1, tab2 = st.tabs(tabs)
         for tab in tabs:
             set_widget_style(tab, font_size=24)
         with tab1:
-            st.markdown(set_text_style('<b>Метрики оценки скорости интернета</b>', font_size=32,
+            st.markdown(set_text_style('<b>Metrics for Internet speed assessment</b>', font_size=24,
                                        color=MegafonColors.brandPurple, text_align='center'),
                         unsafe_allow_html=True)
+           # st.markdown(set_text_style('<b>Important metrics:</b>', font_size=24, color=MegafonColors.orangeDark),
+            #             unsafe_allow_html=True)
             st.markdown(
-                set_text_style('''Эксперты компании [Ookla](https://www.ookla.com/) оценивают скорость интернет, 
-                предоставляемого оператором, на основании двух метрик: <b>Средняя скорость «к абоненту»</b> и 
-                <b>Средняя скорость «от абонента»</b> в соотношении <b>9:1</b>''', tag='span', font_size=18),
+                set_text_style(
+                    'According to [Ookla](https://www.ookla.com/) experts 90% of the user assessment of Internet '
+                    'is attributed to download speed and the remaining 10% to upload speed. '
+                    'Therefore, in the further research only the following metrics will be focused on:', tag='span',
+                    font_size=20),
                 unsafe_allow_html=True
             )
-            # st.markdown(set_text_style('<b>Важные метрики:</b>', font_size=24, color=MegafonColors.orangeDark),
-            #             unsafe_allow_html=True)
             st.markdown('''       
             <ul>
-            <li><span style="font-size:24px">Средняя скорость «к абоненту»</span></li>
-            <li><span style="font-size:24px">Скорость загрузки потокового видео</span></li>
-            <li><span style="font-size:24px">Скорость загрузки web-страниц через браузер</span></li>
+            <li><span style="font-size:20px">Downlink Throughput</span></li>
+            <li><span style="font-size:20px">Video Streaming Download Throughput</span></li>
+            <li><span style="font-size:20px">Web Page Download Throughput</span></li>
             </ul>
-            </p>
             ''', unsafe_allow_html=True)
-
             st.markdown('---')
-            st.markdown(set_text_style('<b>Статистика оценки скорости интернета</b>', font_size=32,
+            st.markdown(set_text_style('<b>Statistic for assessing of the average value of the metrics</b>',
+                                       font_size=24,
                                        color=MegafonColors.brandPurple, text_align='center'),
                         unsafe_allow_html=True)
             st.markdown(
-                set_text_style('''Компания [Ookla](https://www.ookla.com/) в методологии оценки средней скорости 
-                интернет соединения провайдеров использует модифицированный вариант тримера:''', tag='span',
-                               font_size=18),
+                set_text_style('''[Ookla](https://www.ookla.com/) uses modified trimmer in the methodology 
+                for assessing the average speed of Internet connections of providers:''', tag='span',
+                               font_size=20),
                 unsafe_allow_html=True
             )
-            st.latex('\hat{TM}={P_{10}+8\cdot P_{50}+P_{90} \over {10}}')
-            st.markdown('')
+            st.latex(r'\hat{TM}={P_{10}+8\cdot P_{50}+P_{90} \over {10}}')
+            st.markdown('---')
+            st.markdown(set_text_style('<b>Probability density function of statistics</b>',
+                                       font_size=24,
+                                       color=MegafonColors.brandPurple, text_align='center'),
+                        unsafe_allow_html=True)
             statistic_distributions = get_stat_dist()
             fig = plot_metric_histograms_4_1()
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
+            st.markdown(set_text_style('The distributions of statistics are almost symmetrical. '
+                                       'Therefore, the central position of statistic can be estimated as a middle of '
+                                       'confidence interval.',
+                                       font_size=20),
+                        unsafe_allow_html=True)
         with tab2:
             st.markdown('')
-            c1, c2 = st.columns(2)
-            with c1:
-                st.markdown(set_text_style('<b>Критерий</b>', font_size=32, color=MegafonColors.brandPurple,
-                                           text_align='center'),
-                            unsafe_allow_html=True)
-                st.markdown(set_text_style('Перестановочный тест (Permutation test)', font_size=24, text_align='center'),
-                            unsafe_allow_html=True)
-            with c2:
-                st.markdown(set_text_style('<b>Оценка доверительного интервала</b>', font_size=32, color=MegafonColors.brandPurple,
-                                           text_align='center'),
-                            unsafe_allow_html=True)
-                st.markdown(set_text_style('Бутстрап (Bootstrapping)', font_size=24, text_align='center'),
-                            unsafe_allow_html=True)
+            # c1, c2 = st.columns(2)
+            # with c1:
+            st.markdown(set_text_style('<b>Statistical criteria (test)</b>', font_size=24,
+                                       color=MegafonColors.brandPurple,
+                                       text_align='center'),
+                        unsafe_allow_html=True)
+            st.markdown(set_text_style('Permutation test', font_size=24, text_align='center'),
+                        unsafe_allow_html=True)
+            # with c2:
+            st.markdown(set_text_style('<b>Estimating the confidence interval</b>', font_size=24, color=MegafonColors.brandPurple,
+                                       text_align='center'),
+                        unsafe_allow_html=True)
+            st.markdown(set_text_style('Bootstrapping', font_size=24, text_align='center'),
+                        unsafe_allow_html=True)
             st.markdown('---')
             c1, c2 = st.columns(2)
             with c1:
-                st.markdown(set_text_style('<b>Уровень значимости</b>', font_size=32, color=MegafonColors.brandPurple,
+                st.markdown(set_text_style('<b>Significance level</b>', font_size=24, color=MegafonColors.brandPurple,
                                            text_align='center'),
                             unsafe_allow_html=True)
-                st.latex('\large \\alpha=0.05')
+                st.latex(r'\large \\alpha=0.05')
             with c2:
-                st.markdown(set_text_style('<b>Уровень доверия</b>', font_size=32, color=MegafonColors.brandPurple,
+                st.markdown(set_text_style('<b>Confidence level</b>', font_size=24, color=MegafonColors.brandPurple,
                                            text_align='center'),
                             unsafe_allow_html=True)
-                st.latex('\large \\beta=1-\\alpha=0.95')
+                st.latex(r'\large \\beta=0.95\\(1-alpha)')
             st.markdown('---')
-            st.markdown(set_text_style('<b>Правило принятия решения</b>', font_size=32, color=MegafonColors.brandPurple,
+            st.markdown(set_text_style('<b>Decision rule</b>', font_size=24, color=MegafonColors.brandPurple,
                                        text_align='center'),
                         unsafe_allow_html=True)
             rule_text = '''
             <ul>
-            <li><span style="font-size:24px">Если p-value для всех метрик ниже уровня значимости, то считаем, 
-            что клиенты тестовых групп принадлежат к одной популяции<span></li>
-            <li><span style="font-size:24px">В противном случае считаем, что клиенты тестовых групп принадлежат 
-            к разным популяциям</li>
+            <li><span style="font-size:24px">If the <b>p-value is less then significance level for all metrics</b>, 
+            i.e. if the null hypothesis can be rejected for all metrics, 
+            then it's considered that <b>the customers of the test groups belong to the same population</b><span></li>
+            <li><span style="font-size:24px"><b>Otherwise</b>, it's considered that <b>the customers of the test groups 
+            belong to different populations</b></li>
             </ul>
             '''
             st.markdown(rule_text, unsafe_allow_html=True)
-    case "Причины недовольства сервисом мобильного интернета":
-        tabs = ['Цель исследования',
-                'Разведочный анализ',
-                'Статистические тесты',
-                'Выводы']
+    case "Reasons for dissatisfaction with mobile Internet service":
+        tabs = ['Objective of research',
+                'Exploratory analysis',
+                'Statistical tests',
+                'Conclusion']
         tab1, tab2, tab3, tab4 = st.tabs(tabs)
         for tab in tabs:
             set_widget_style(tab, font_size=24)
@@ -532,43 +700,43 @@ match choice:
             c1, c2 = st.columns(2, gap='medium')
             with c1:
                 st.markdown('&nbsp;')
-                s = display_cat_info(data_clean).set_properties(pd.IndexSlice['Ужасно':'Satisfied', 'Интернет и видео'],
+                s = display_cat_info(data_clean).set_properties(pd.IndexSlice['Very unsatisfied':'Satisfied', 'Internet and Video'],
                                                                 color='white',
                                                                 background=px.colors.DEFAULT_PLOTLY_COLORS[0],
                                                                 opacity=0.5).set_properties(
-                    pd.IndexSlice['Ужасно':'Satisfied', 'Интернет'], color='white',
+                    pd.IndexSlice['Very unsatisfied':'Satisfied', 'Internet'], color='white',
                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5).set_properties(
-                    pd.IndexSlice['Ужасно':'Satisfied', 'Видео'], color='white',
+                    pd.IndexSlice['Very unsatisfied':'Satisfied', 'Video'], color='white',
                     background=px.colors.DEFAULT_PLOTLY_COLORS[2],
                     opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_dist"), unsafe_allow_html=True)
                 categories = '''
             <br>
             <ul>
-            <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:18px">&nbsp;Интернет и видео&nbsp;</span> - <span style="font-size:18px">недовольные скоростью мобильного интернета и загрузкой видео</span></li>
-            <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:18px">&nbsp;Интернет&nbsp;</span> - <span style="font-size:18px">недовольные в первую очередь скоростью мобильного интернета</span></li>
-            <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:18px">&nbsp;Видео&nbsp;</span> - <span style="font-size:18px">недовольные в первую очередь скоростью загрузки видео</span></li>
+            <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:20px">&nbsp;Internet and Video&nbsp;</span> - <span style="font-size:20px">unsatisfied with the speed of mobile Internet and Video loading</span></li>
+            <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:20px">&nbsp;Internet&nbsp;</span> - <span style="font-size:20px">unsatisfied primarily with the speed of mobile Internet</span></li>
+            <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:20px">&nbsp;Video&nbsp;</span> - <span style="font-size:20px">unsatisfied primarily with the speed of Video loading</span></li>
             </ul>
                             '''
                 st.markdown(categories, unsafe_allow_html=True)
             with c2:
                 st.markdown('&nbsp;')
-                goal_text = set_text_style('<b>Цель</b><br>', tag='p', color=MegafonColors.orangeDark, font_size=32,
+                goal_text = set_text_style('<b>Objective</b><br>', tag='p', color=MegafonColors.brandPurple, font_size=24,
                                            text_align='center')
-                goal_text += set_text_style('Выяснить, является ли разделение статистически верным?',
-                                            tag='span', font_size=24)
+                goal_text += set_text_style('Determine whether the division is statistically correct?',
+                                            tag='span', font_size=20)
                 st.markdown(goal_text, unsafe_allow_html=True)
                 st.markdown('&nbsp;')
-                task_text = set_text_style('<b>Вопросы</b><br>', tag='p',
-                                           color=MegafonColors.orangeDark, font_size=32, text_align='center')
+                task_text = set_text_style('<b>Questions</b><br>', tag='p',
+                                           color=MegafonColors.brandPurple, font_size=24, text_align='center')
                 task_text += set_text_style(f"""
                 <ul>
-                <li>{set_text_style('Принадлежат ли клиенты вышеуказанных групп к разным популяциям?',
-                                    font_size=24)}</li>
-                <li>{set_text_style('Если клиенты не принадлежат к одной популяции, то по каким метрикам особенно '
-                                    'сильно различаются?', font_size=24)}</li>
+                <li>{set_text_style('Do customers in the groups belong to different populations?',
+                                    font_size=20)}</li>
+                <li>{set_text_style('If customers do not belong to the same population, '
+                                    'what metrics do they differ in?', font_size=20)}</li>
                 </ul>
-                """, tag='span', font_size=24)
+                """, tag='span', font_size=20)
                 st.markdown(task_text, unsafe_allow_html=True)
         with tab2:
             @st.cache_resource
@@ -589,8 +757,8 @@ match choice:
             research_data, groups, group_pairs, ci, ci_overlapping, ci_center = load_5_3()
 
             # st.markdown('&nbsp;')
-            st.markdown(set_text_style('<b>Доверительные интервалы статистик</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style('<b>Confidence intervals of statistics</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
             fig = ci_plot_5_3()
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
@@ -610,7 +778,7 @@ match choice:
             def plot_metric_histograms_5_4_1(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -629,7 +797,7 @@ match choice:
             def plot_metric_histograms_5_4_2(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -648,7 +816,7 @@ match choice:
             def plot_metric_histograms_5_4_3(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -658,24 +826,24 @@ match choice:
 
             alternatives, pvalues, mark_statistic, null_distributions, statistics = load_5_4_1()
 
-            st.markdown(set_text_style(f'<b>Группы "{groups[0]}" и "{groups[1]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[0]}" и "{groups[1]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{Интернет \, и \, видео}-\hat{TM}_{Интернет}')
-            c2.latex('H_0:\Delta \hat{TM}=0')
-            c3.latex('H_1:\Delta \hat{TM}≠0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{Internet \, и \, видео}-\hat{TM}_{Internet}')
+            c2.latex(r'H_0:\Delta \hat{TM}=0')
+            c3.latex(r'H_1:\Delta \hat{TM}≠0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_5_4_1(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 0
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -683,7 +851,7 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_5_4_1"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Выводы:</b>', tag='p',
+            conclusion_text = set_text_style('<b>Outcomes</b>', tag='p',
                                              color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'есть значимые различия</b>', tag='span', font_size=20)
@@ -692,24 +860,24 @@ match choice:
             _, pvalues, mark_statistic, null_distributions, statistics = load_5_4_2()
 
             st.markdown('---')
-            st.markdown(set_text_style(f'<b>Группы "{groups[1]}" и "{groups[2]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[1]}" и "{groups[2]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{Интернет \, и \, видео}-\hat{TM}_{Видео}')
-            c2.latex('H_0:\Delta \hat{TM}=0')
-            c3.latex('H_1:\Delta \hat{TM}≠0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{Internet \, и \, видео}-\hat{TM}_{Video}')
+            c2.latex(r'H_0:\Delta \hat{TM}=0')
+            c3.latex(r'H_1:\Delta \hat{TM}≠0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_5_4_2(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 1
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -717,7 +885,7 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_5_4_2"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Вывод:</b><br>', tag='p', font_size=24,
+            conclusion_text = set_text_style('<b>Outcomes</b><br>', tag='p', font_size=24,
                                              color=MegafonColors.brandGreenDarken10, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'нет значимых различий</b>', tag='span', font_size=20)
@@ -726,24 +894,24 @@ match choice:
             _, pvalues, mark_statistic, null_distributions, statistics = load_5_4_3()
 
             st.markdown('---')
-            st.markdown(set_text_style(f'<b>Группы "{groups[2]}" и "{groups[0]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[2]}" и "{groups[0]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{Видео}-\hat{TM}_{Интернет \, и \, видео}')
-            c2.latex('H_0:\Delta \hat{TM}=0')
-            c3.latex('H_1:\Delta \hat{TM}≠0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{Video}-\hat{TM}_{Internet \, и \, видео}')
+            c2.latex(r'H_0:\Delta \hat{TM}=0')
+            c3.latex(r'H_1:\Delta \hat{TM}≠0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_5_4_3(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 2
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -751,13 +919,13 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_5_4_3"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Выводы:</b>', tag='p',
+            conclusion_text = set_text_style('<b>Outcomes</b>', tag='p',
                                              color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'есть значимые различия</b>', tag='span', font_size=20)
             st.markdown(conclusion_text, unsafe_allow_html=True)
         with tab4:
-            st.markdown(set_text_style(f'<b>Значения p-value статистических тестов</b>', font_size=32,
+            st.markdown(set_text_style(f'<b>Statistical tests p-values</b>', font_size=24,
                                        color=MegafonColors.brandPurple, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues, metrics=research_metrics, alpha=alpha,
@@ -765,44 +933,47 @@ match choice:
             st.markdown(s.to_html(table_uuid="table_pvalues_5_5"), unsafe_allow_html=True)
             st.markdown('---')
             # st.markdown('---')
-            # st.markdown(set_text_style(f'<b>Категории по причинам недовольства сервисом мобильного интернета</b>', font_size=32,
+            # st.markdown(set_text_style(f'<b>Категории по причинам недовольства сервисом мобильного интернета</b>', font_size=24,
             #                            color=MegafonColors.brandPurple, text_align='center'),
             #             unsafe_allow_html=True)
             # st.markdown('&nbsp;')
             c1, c2 = st.columns(2, gap='medium')
             with c1:
                 s = display_cat_info(data_clean) \
-                    .set_properties(pd.IndexSlice['Ужасно':'Satisfied', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Very unsatisfied':'Satisfied', 'Internet and Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[0], opacity=0.5) \
-                    .set_properties(pd.IndexSlice['Ужасно':'Satisfied', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Very unsatisfied':'Satisfied', 'Internet': 'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_5_5"), unsafe_allow_html=True)
                 categories = '''
                 <br>
                 <ul>
-                <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:18px">&nbsp;Интернет и видео&nbsp;</span>&nbsp- Недовольные скоростью мобильного интернета и загрузкой видео</li>
-                <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:18px">&nbsp;Интернет или видео&nbsp;</span>&nbsp- Недовольные скоростью мобильного интернета или загрузкой видео</li>
+                <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:20px">&nbsp;
+                Internet and Video&nbsp;</span>&nbsp- Dissatisfied with the speed of mobile Internet and video loading</li>
+                <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:20px">&nbsp;
+                Internet or Video&nbsp;</span>&nbsp- Dissatisfied with the speed of mobile Internet or video loading</li>
                 </ul>
                 '''
                 st.markdown(categories, unsafe_allow_html=True)
             with c2:
-                st.markdown(set_text_style(f'<b>Выводы</b>', font_size=32,
+                st.markdown(set_text_style(f'<b>Outcomes</b>', font_size=24,
                                            color=MegafonColors.orangeDark, text_align='center'),
                             unsafe_allow_html=True)
                 conclusion_text = '''
                 <ul>
-                <li><span style="font-size:24px">Клиенты группы "<b>Интернет</b>" и "<b>Видео</b>" 
-                принадлежат к <b>одной популяции</b>.</span></li>
-                <li><span style="font-size:24px">Группа "<b>Интернет и видео</b>" 
-                принадлежит к <b>отдельной популяции</b>.</span></li>
+                <li><span style="font-size:24px">Customers of groups "<b>Internet</b>" and "<b>Video</b>" 
+                belong to <b>the same population</b>.</span></li>
+                <li><span style="font-size:24px">Customers of group "<b>Internet and Video</b>" 
+                belong to <b>separate population</b>. The strongest differences is in the <b>"Downlink Throughput"</b> 
+                metric.</span></li>
                 </ul>
                 '''
                 st.markdown(conclusion_text, unsafe_allow_html=True)
-    case "Оценки качества сервиса мобильного интернета":
-        tabs = ['Цель исследования',
-                'Разведочный анализ',
-                'Статистические тесты',
-                'Выводы']
+    case "Mobile Internet service quality assessments":
+        tabs = ['Objective of research',
+                'Exploratary analysis',
+                'Statistical tests',
+                'Conclusion']
         tab1, tab2, tab3, tab4 = st.tabs(tabs)
         for tab in tabs:
             set_widget_style(tab, font_size=24)
@@ -811,44 +982,44 @@ match choice:
             with c1:
                 st.markdown('&nbsp;')
                 s = display_cat_info(data_clean)\
-                    .set_properties(pd.IndexSlice['Very dissatisfied', 'Интернет и видео': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Very unsatisfied', 'Internet and Video': 'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[0], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Dissatisfied', 'Интернет и видео': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Unsatisfied', 'Internet and Video': 'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Neutral', 'Интернет и видео': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral', 'Internet and Video': 'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Satisfied', 'Интернет и видео': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Satisfied', 'Internet and Video': 'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[3], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Very satisfied', 'Нет'], color='white',
+                    .set_properties(pd.IndexSlice['Very satisfied', 'No'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[4], opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_dist"), unsafe_allow_html=True)
                 categories = '''
             <br>
             <ul>
-            <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:18px">&nbsp;Ужасно&nbsp;</span></li>
-            <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:18px">&nbsp;Unsatisfied&nbsp;</span></li>
-            <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:18px">&nbsp;Neutral&nbsp;</span></li>
-            <li><span style="color:white;background-color:rgb(214, 39, 40);opacity:0.5;font-size:18px">&nbsp;Satisfied&nbsp;</span></li>
-            <li><span style="color:white;background-color:rgb(148, 103, 189);opacity:0.5;font-size:18px">&nbsp;Very satisfied&nbsp;</span></li>
+            <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:20px">&nbsp;Very unsatisfied&nbsp;</span></li>
+            <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:20px">&nbsp;Unsatisfied&nbsp;</span></li>
+            <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:20px">&nbsp;Neutral&nbsp;</span></li>
+            <li><span style="color:white;background-color:rgb(214, 39, 40);opacity:0.5;font-size:20px">&nbsp;Satisfied&nbsp;</span></li>
+            <li><span style="color:white;background-color:rgb(148, 103, 189);opacity:0.5;font-size:20px">&nbsp;Very satisfied&nbsp;</span></li>
             </ul>
                             '''
                 st.markdown(categories, unsafe_allow_html=True)
             with c2:
                 st.markdown('&nbsp;')
-                goal_text = set_text_style('<b>Цель</b><br>', tag='p', color=MegafonColors.orangeDark, font_size=32,
+                goal_text = set_text_style('<b>Objective</b><br>', tag='p', color=MegafonColors.orangeDark, font_size=24,
                                            text_align='center')
-                goal_text += set_text_style('Выяснить, является ли разделение статистически верным?',
+                goal_text += set_text_style('Determine whether the division is statistically correct?',
                                             tag='span', font_size=24)
                 st.markdown(goal_text, unsafe_allow_html=True)
                 st.markdown('&nbsp;')
-                task_text = set_text_style('<b>Вопросы</b><br>', tag='p',
-                                           color=MegafonColors.orangeDark, font_size=32, text_align='center')
+                task_text = set_text_style('<b>Questions</b><br>', tag='p',
+                                           color=MegafonColors.orangeDark, font_size=24, text_align='center')
                 task_text += set_text_style(f"""
                 <ul>
-                <li>{set_text_style('Принадлежат ли клиенты вышеуказанных групп к разным популяциям?',
+                <li>{set_text_style('Do customers in the groups belong to different populations?',
                                     font_size=24)}</li>
-                <li>{set_text_style('Если клиенты не принадлежат к одной популяции, то по каким метрикам особенно '
-                                    'сильно различаются?', font_size=24)}</li>
+                <li>{set_text_style('If customers do not belong to the same population, '
+                                    'what metrics do they differ in?', font_size=24)}</li>
                 </ul>
                 """, tag='span', font_size=24)
                 st.markdown(task_text, unsafe_allow_html=True)
@@ -871,8 +1042,8 @@ match choice:
             research_data, groups, group_pairs, ci, ci_overlapping, ci_center = load_6_3()
 
             # st.markdown('&nbsp;')
-            st.markdown(set_text_style('<b>Доверительные интервалы статистик</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style('<b>Confidence intervals of statistics</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
             fig = ci_plot_6_3()
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
@@ -892,7 +1063,7 @@ match choice:
             def plot_metric_histograms_6_4_1(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -911,7 +1082,7 @@ match choice:
             def plot_metric_histograms_6_4_2(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -930,7 +1101,7 @@ match choice:
             def plot_metric_histograms_6_4_3(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -949,7 +1120,7 @@ match choice:
             def plot_metric_histograms_6_4_4(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -959,24 +1130,24 @@ match choice:
 
             alternatives, pvalues, mark_statistic, null_distributions, statistics = load_6_4_1()
 
-            st.markdown(set_text_style(f'<b>Группы "{groups[0]}" и "{groups[1]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[0]}" и "{groups[1]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{Ужасно}-\hat{TM}_{Unsatisfied}')
-            c2.latex('H_0:\Delta \hat{TM}≥0')
-            c3.latex('H_1:\Delta \hat{TM}<0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{Very unsatisfied}-\hat{TM}_{Unsatisfied}')
+            c2.latex(r'H_0:\Delta \hat{TM}≥0')
+            c3.latex(r'H_1:\Delta \hat{TM}<0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_6_4_1(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 0
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -984,7 +1155,7 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_6_4_1"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Выводы:</b>', tag='p',
+            conclusion_text = set_text_style('<b>Outcomes</b>', tag='p',
                                              color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'есть значимые различия</b>', tag='span', font_size=20)
@@ -993,24 +1164,24 @@ match choice:
             _, pvalues, mark_statistic, null_distributions, statistics = load_6_4_2()
 
             st.markdown('---')
-            st.markdown(set_text_style(f'<b>Группы "{groups[1]}" и "{groups[2]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[1]}" и "{groups[2]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{Unsatisfied}-\hat{TM}_{Neutral}')
-            c2.latex('H_0:\Delta \hat{TM}≥0')
-            c3.latex('H_1:\Delta \hat{TM}<0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{Unsatisfied}-\hat{TM}_{Neutral}')
+            c2.latex(r'H_0:\Delta \hat{TM}≥0')
+            c3.latex(r'H_1:\Delta \hat{TM}<0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_6_4_2(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 1
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -1018,7 +1189,7 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_6_4_2"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Вывод:</b><br>', tag='p', font_size=24,
+            conclusion_text = set_text_style('<b>Outcomes</b><br>', tag='p', font_size=24,
                                              color=MegafonColors.brandGreenDarken10, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'нет значимых различий</b>', tag='span', font_size=20)
@@ -1027,24 +1198,24 @@ match choice:
             _, pvalues, mark_statistic, null_distributions, statistics = load_6_4_3()
 
             st.markdown('---')
-            st.markdown(set_text_style(f'<b>Группы "{groups[2]}" и "{groups[3]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[2]}" и "{groups[3]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{Neutral}-\hat{TM}_{Satisfied}')
-            c2.latex('H_0:\Delta \hat{TM}≥0')
-            c3.latex('H_1:\Delta \hat{TM}<0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{Neutral}-\hat{TM}_{Satisfied}')
+            c2.latex(r'H_0:\Delta \hat{TM}≥0')
+            c3.latex(r'H_1:\Delta \hat{TM}<0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_6_4_3(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 2
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -1052,7 +1223,7 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_6_4_3"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Выводы:</b>', tag='p',
+            conclusion_text = set_text_style('<b>Outcomes</b>', tag='p',
                                              color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'есть значимые различия</b>', tag='span', font_size=20)
@@ -1061,24 +1232,24 @@ match choice:
             _, pvalues, mark_statistic, null_distributions, statistics = load_6_4_4()
 
             st.markdown('---')
-            st.markdown(set_text_style(f'<b>Группы "{groups[3]}" и "{groups[0]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[3]}" и "{groups[0]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{Satisfied}-\hat{TM}_{Very satisfied}')
-            c2.latex('H_0:\Delta \hat{TM}≥0')
-            c3.latex('H_1:\Delta \hat{TM}<0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{Satisfied}-\hat{TM}_{Very satisfied}')
+            c2.latex(r'H_0:\Delta \hat{TM}≥0')
+            c3.latex(r'H_1:\Delta \hat{TM}<0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_6_4_4(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 2
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -1086,13 +1257,13 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_6_4_4"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Выводы:</b>', tag='p',
+            conclusion_text = set_text_style('<b>Outcomes</b>', tag='p',
                                              color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'есть значимые различия</b>', tag='span', font_size=20)
             st.markdown(conclusion_text, unsafe_allow_html=True)
         with tab4:
-            st.markdown(set_text_style(f'<b>Значения p-value статистических тестов</b>', font_size=32,
+            st.markdown(set_text_style(f'<b>Statistical tests p-values</b>', font_size=24,
                                        color=MegafonColors.brandPurple, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues, metrics=research_metrics, alpha=alpha,
@@ -1100,49 +1271,49 @@ match choice:
             st.markdown(s.to_html(table_uuid="table_pvalues_6_5"), unsafe_allow_html=True)
             st.markdown('---')
             # st.markdown('---')
-            # st.markdown(set_text_style(f'<b>Категории по причинам недовольства сервисом мобильного интернета</b>', font_size=32,
+            # st.markdown(set_text_style(f'<b>Категории по причинам недовольства сервисом мобильного интернета</b>', font_size=24,
             #                            color=MegafonColors.brandPurple, text_align='center'),
             #             unsafe_allow_html=True)
             # st.markdown('&nbsp;')
             c1, c2 = st.columns(2, gap='medium')
             with c1:
                 s = display_cat_info(data_clean)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет и видео':'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Very unsatisfied': 'Unsatisfied', 'Internet and Video':'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[0], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет и видео':'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Internet and Video':'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Very satisfied', 'Нет'], color='white',
+                    .set_properties(pd.IndexSlice['Very satisfied', 'No'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_6_5"), unsafe_allow_html=True)
                 categories = '''
                 <br>
                 <ul>
-                <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:18px">&nbsp;Неудовлетворительно&nbsp;</span>&nbsp</li>
-                <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:18px">&nbsp;Удовлетворительно&nbsp;</span>&nbsp</li>
-                <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:18px">&nbsp;Very satisfied&nbsp;</span>&nbsp</li>
+                <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:20px">&nbsp;Неудовлетворительно&nbsp;</span>&nbsp</li>
+                <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:20px">&nbsp;Удовлетворительно&nbsp;</span>&nbsp</li>
+                <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:20px">&nbsp;Very satisfied&nbsp;</span>&nbsp</li>
                 </ul>
                 '''
                 st.markdown(categories, unsafe_allow_html=True)
             with c2:
-                st.markdown(set_text_style(f'<b>Выводы</b>', font_size=32,
+                st.markdown(set_text_style(f'<b>Outcomes</b>', font_size=24,
                                            color=MegafonColors.orangeDark, text_align='center'),
                             unsafe_allow_html=True)
                 conclusion_text = '''
                 <ul>
-                <li><span style="font-size:24px">Клиенты группы "<b>Ужасно</b>" и "<b>Unsatisfied</b>" 
-                принадлежат к <b>одной популяции</b>.</span></li>
-                <li><span style="font-size:24px">Клиенты группы "<b>Neutral</b>" и "<b>Satisfied</b>" 
-                принадлежат к <b>одной популяции</b>.</span></li>
-                <li><span style="font-size:24px">Самое сильное влияние у метрики "<b>Скорость загрузки потокового видео</b>", 
-                а самое слабое у метрики <b>Средняя скорость «к абоненту»</b>.</span></li>
+                <li><span style="font-size:24px">Customers of groups "<b>Very unsatisfied</b>" и "<b>Unsatisfied</b>" 
+                belong to <b>the same population</b>.</span></li>
+                <li><span style="font-size:24px">Customers of groups "<b>Neutral</b>" и "<b>Satisfied</b>" 
+                belong to <b>the same population</b>.</span></li>
+                <li><span style="font-size:24px">The "<b>Video Streaming Download Throughput</b>" has the strongest influence, 
+                and the <b>Downlink Throughput</b> has the weakest one.</span></li>
                 </ul>
                 '''
                 st.markdown(conclusion_text, unsafe_allow_html=True)
-    case "Уровни удовлетворенности сервисом мобильного интернета":
-        tabs = ['Цель исследования',
-                'Разведочный анализ',
-                'Статистические тесты',
-                'Выводы']
+    case "CSAT of mobile Internet service":
+        tabs = ['Objective of research',
+                'Exploratory analysis',
+                'Statistical tests',
+                'Conclusion']
         tab1, tab2, tab3, tab4 = st.tabs(tabs)
         for tab in tabs:
             set_widget_style(tab, font_size=24)
@@ -1151,44 +1322,44 @@ match choice:
             with c1:
                 st.markdown('&nbsp;')
                 s = display_cat_info(data_clean)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Very unsatisfied': 'Unsatisfied', 'Internet and Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[0], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Very unsatisfied': 'Unsatisfied', 'Internet': 'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Internet and Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Internet': 'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[3], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Very satisfied', 'Нет'], color='white',
+                    .set_properties(pd.IndexSlice['Very satisfied', 'No'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[4], opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_dist"), unsafe_allow_html=True)
                 categories = '''
             <br>
             <ul>
-            <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:18px">&nbsp;1&nbsp;</span> - Полностью неудовлетворены</li>
-            <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:18px">&nbsp;2&nbsp;</span> - Частично неудовлетворены</li>
-            <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:18px">&nbsp;3&nbsp;</span> - Ни удовлетворены, ни разочарованы</li>
-            <li><span style="color:white;background-color:rgb(214, 39, 40);opacity:0.5;font-size:18px">&nbsp;4&nbsp;</span> - Частично удовлетворены</li>
-            <li><span style="color:white;background-color:rgb(148, 103, 189);opacity:0.5;font-size:18px">&nbsp;5&nbsp;</span> - Полностью удовлетворены</li>
+            <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:20px">&nbsp;1&nbsp;</span> - Very unsatisfied</li>
+            <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:20px">&nbsp;2&nbsp;</span> - Partially unsatisfied</li>
+            <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:20px">&nbsp;3&nbsp;</span> - Neutral</li>
+            <li><span style="color:white;background-color:rgb(214, 39, 40);opacity:0.5;font-size:20px">&nbsp;4&nbsp;</span> - Partially satisfied</li>
+            <li><span style="color:white;background-color:rgb(148, 103, 189);opacity:0.5;font-size:20px">&nbsp;5&nbsp;</span> - Very satisfied</li>
             </ul>
                             '''
                 st.markdown(categories, unsafe_allow_html=True)
             with c2:
                 st.markdown('&nbsp;')
-                goal_text = set_text_style('<b>Цель</b><br>', tag='p', color=MegafonColors.orangeDark, font_size=32,
+                goal_text = set_text_style('<b>Objective</b><br>', tag='p', color=MegafonColors.orangeDark, font_size=24,
                                            text_align='center')
-                goal_text += set_text_style('Выяснить, является ли разделение статистически верным?',
+                goal_text += set_text_style('Determine whether the division is statistically correct?',
                                             tag='span', font_size=24)
                 st.markdown(goal_text, unsafe_allow_html=True)
                 st.markdown('&nbsp;')
-                task_text = set_text_style('<b>Вопросы</b><br>', tag='p',
-                                           color=MegafonColors.orangeDark, font_size=32, text_align='center')
+                task_text = set_text_style('<b>Questions</b><br>', tag='p',
+                                           color=MegafonColors.orangeDark, font_size=24, text_align='center')
                 task_text += set_text_style(f"""
                 <ul>
-                <li>{set_text_style('Принадлежат ли клиенты с разными CSAT к разным популяциям?',
+                <li>{set_text_style('Do customers in the groups belong to different populations?',
                                     font_size=24)}</li>
-                <li>{set_text_style('Если клиенты с разными CSAT не принадлежат к одной популяции, '
-                                    'то по каким метрикам особенно сильно различаются?', font_size=24)}</li>
+                <li>{set_text_style('If customers do not belong to the same population, '
+                                    'what metrics do they differ in?', font_size=24)}</li>
                 </ul>
                 """, tag='span', font_size=24)
                 st.markdown(task_text, unsafe_allow_html=True)
@@ -1211,8 +1382,8 @@ match choice:
             research_data, groups, group_pairs, ci, ci_overlapping, ci_center = load_7_3()
 
             # st.markdown('&nbsp;')
-            st.markdown(set_text_style('<b>Доверительные интервалы статистик</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style('<b>Confidence intervals of statistics</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
             fig = ci_plot_7_3()
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
@@ -1232,7 +1403,7 @@ match choice:
             def plot_metric_histograms_7_4_1(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -1251,7 +1422,7 @@ match choice:
             def plot_metric_histograms_7_4_2(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -1270,7 +1441,7 @@ match choice:
             def plot_metric_histograms_7_4_3(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -1289,7 +1460,7 @@ match choice:
             def plot_metric_histograms_7_4_4(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -1299,24 +1470,24 @@ match choice:
 
             alternatives, pvalues, mark_statistic, null_distributions, statistics = load_7_4_1()
 
-            st.markdown(set_text_style(f'<b>Группы "{groups[0]}" и "{groups[1]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[0]}" и "{groups[1]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{1}-\hat{TM}_{2}')
-            c2.latex('H_0:\Delta \hat{TM}≥0')
-            c3.latex('H_1:\Delta \hat{TM}<0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{1}-\hat{TM}_{2}')
+            c2.latex(r'H_0:\Delta \hat{TM}≥0')
+            c3.latex(r'H_1:\Delta \hat{TM}<0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_7_4_1(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 0
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -1324,7 +1495,7 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_7_4_1"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Выводы:</b>', tag='p',
+            conclusion_text = set_text_style('<b>Outcomes</b>', tag='p',
                                              color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'есть значимые различия</b>', tag='span', font_size=20)
@@ -1333,24 +1504,24 @@ match choice:
             _, pvalues, mark_statistic, null_distributions, statistics = load_7_4_2()
 
             st.markdown('---')
-            st.markdown(set_text_style(f'<b>Группы "{groups[1]}" и "{groups[2]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[1]}" и "{groups[2]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{2}-\hat{TM}_{3}')
-            c2.latex('H_0:\Delta \hat{TM}≥0')
-            c3.latex('H_1:\Delta \hat{TM}<0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{2}-\hat{TM}_{3}')
+            c2.latex(r'H_0:\Delta \hat{TM}≥0')
+            c3.latex(r'H_1:\Delta \hat{TM}<0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_7_4_2(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 1
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -1358,7 +1529,7 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_7_4_2"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Вывод:</b><br>', tag='p', font_size=24,
+            conclusion_text = set_text_style('<b>Outcomes</b><br>', tag='p', font_size=24,
                                              color=MegafonColors.brandGreenDarken10, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'нет значимых различий</b>', tag='span', font_size=20)
@@ -1367,24 +1538,24 @@ match choice:
             _, pvalues, mark_statistic, null_distributions, statistics = load_7_4_3()
 
             st.markdown('---')
-            st.markdown(set_text_style(f'<b>Группы "{groups[2]}" и "{groups[3]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[2]}" и "{groups[3]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{3}-\hat{TM}_{4}')
-            c2.latex('H_0:\Delta \hat{TM}≥0')
-            c3.latex('H_1:\Delta \hat{TM}<0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{3}-\hat{TM}_{4}')
+            c2.latex(r'H_0:\Delta \hat{TM}≥0')
+            c3.latex(r'H_1:\Delta \hat{TM}<0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_7_4_3(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 2
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -1392,7 +1563,7 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_7_4_3"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Выводы:</b>', tag='p',
+            conclusion_text = set_text_style('<b>Outcomes</b>', tag='p',
                                              color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'есть значимые различия</b>', tag='span', font_size=20)
@@ -1401,24 +1572,24 @@ match choice:
             _, pvalues, mark_statistic, null_distributions, statistics = load_7_4_4()
 
             st.markdown('---')
-            st.markdown(set_text_style(f'<b>Группы "{groups[3]}" и "{groups[0]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[3]}" и "{groups[0]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{4}-\hat{TM}_{5}')
-            c2.latex('H_0:\Delta \hat{TM}≥0')
-            c3.latex('H_1:\Delta \hat{TM}<0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{4}-\hat{TM}_{5}')
+            c2.latex(r'H_0:\Delta \hat{TM}≥0')
+            c3.latex(r'H_1:\Delta \hat{TM}<0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_7_4_4(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 2
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -1426,13 +1597,13 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_7_4_4"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Выводы:</b>', tag='p',
+            conclusion_text = set_text_style('<b>Outcomes</b>', tag='p',
                                              color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'есть значимые различия</b>', tag='span', font_size=20)
             st.markdown(conclusion_text, unsafe_allow_html=True)
         with tab4:
-            st.markdown(set_text_style(f'<b>Значения p-value статистических тестов</b>', font_size=32,
+            st.markdown(set_text_style(f'<b>Statistical tests p-values</b>', font_size=24,
                                        color=MegafonColors.brandPurple, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues, metrics=research_metrics, alpha=alpha,
@@ -1440,51 +1611,51 @@ match choice:
             st.markdown(s.to_html(table_uuid="table_pvalues_7_5"), unsafe_allow_html=True)
             st.markdown('---')
             # st.markdown('---')
-            # st.markdown(set_text_style(f'<b>Категории по причинам недовольства сервисом мобильного интернета</b>', font_size=32,
+            # st.markdown(set_text_style(f'<b>Категории по причинам недовольства сервисом мобильного интернета</b>', font_size=24,
             #                            color=MegafonColors.brandPurple, text_align='center'),
             #             unsafe_allow_html=True)
             # st.markdown('&nbsp;')
             c1, c2 = st.columns(2, gap='medium')
             with c1:
                 s = display_cat_info(data_clean)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Very unsatisfied': 'Unsatisfied', 'Internet and Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[0], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Very unsatisfied': 'Unsatisfied', 'Internet': 'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Internet and Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Internet': 'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Very satisfied', 'Нет'], color='white',
+                    .set_properties(pd.IndexSlice['Very satisfied', 'No'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[3], opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_7_5"), unsafe_allow_html=True)
                 categories = '''
                 <br>
                 <ul>
-                <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:18px">&nbsp;1&nbsp;</span>&nbsp- Полностью неудовлетворен</li>
-                <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:18px">&nbsp;2&nbsp;</span>&nbsp- Частично неудовлетворен</li>
-                <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:18px">&nbsp;3&nbsp;</span> - Частично удовлетворен</li>
-                <li><span style="color:white;background-color:rgb(214, 39, 40);opacity:0.5;font-size:18px">&nbsp;4&nbsp;</span>&nbsp- Полностью удовлетворен</li>
+                <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:20px">&nbsp;1&nbsp;</span>&nbsp- Very unsatisfied</li>
+                <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:20px">&nbsp;2&nbsp;</span>&nbsp- Partially unsatisfied</li>
+                <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:20px">&nbsp;3&nbsp;</span> - Partially satisfied</li>
+                <li><span style="color:white;background-color:rgb(214, 39, 40);opacity:0.5;font-size:20px">&nbsp;4&nbsp;</span>&nbsp- Very satisfied</li>
                 </ul>
                 '''
                 st.markdown(categories, unsafe_allow_html=True)
             with c2:
-                st.markdown(set_text_style(f'<b>Выводы</b>', font_size=32,
+                st.markdown(set_text_style(f'<b>Outcomes</b>', font_size=24,
                                            color=MegafonColors.orangeDark, text_align='center'),
                             unsafe_allow_html=True)
                 conclusion_text = '''
                 <ul>
-                <li><span style="font-size:24px">Клиенты группы "<b>1</b>" и "<b>2</b>", а также "<b>4</b>" и "<b>5</b>" принадлежат к <b>одной популяции</b>.</span></li>
-                <li><span style="font-size:24px">Клиенты группы "<b>2</b>" и "<b>3</b>" принадлежат к <b>одной популяции</b>.</span></li>
-                <li><span style="font-size:24px">Самое сильное влияние у метрики "<b>Скорость загрузки потокового видео</b>", а самое слабое у метрики <b>Средняя скорость «к абоненту»</b>.</span></li>
+                <li><span style="font-size:24px">Customers of groups "<b>1</b>" и "<b>2</b>" and also of groups"<b>4</b>" и "<b>5</b>" belong to <b>the same population</b>.</span></li>
+                <li><span style="font-size:24px">Customers of groups "<b>2</b>" и "<b>3</b>" belong to <b>the same population</b>.</span></li>
+                <li><span style="font-size:24px">Самое сильное влияние у метрики "<b>Video Streaming Download Throughput</b>", а самое слабое у метрики <b>Downlink Throughput</b>.</span></li>
                 </ul>
                 '''
                 st.markdown(conclusion_text, unsafe_allow_html=True)
-    case "Влияние метрик на уровень удовлетворенности":
-        tabs = ['Цель исследования',
-                'Разведочный анализ',
-                'Статистические тесты',
-                'Выводы']
+    case "Influence of the metrics on the CSAT of mobile Internet service":
+        tabs = ['Objective of research',
+                'Exploratory analysis',
+                'Statistical tests',
+                'Conclusion']
         tab1, tab2, tab3, tab4 = st.tabs(tabs)
         for tab in tabs:
             set_widget_style(tab, font_size=24)
@@ -1493,43 +1664,43 @@ match choice:
             with c1:
                 st.markdown('&nbsp;')
                 s = display_cat_info(data_clean)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Very unsatisfied': 'Unsatisfied', 'Internet and Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[0], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Ужасно': 'Unsatisfied', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Very unsatisfied': 'Unsatisfied', 'Internet': 'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[1], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет и видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Internet and Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Интернет': 'Видео'], color='white',
+                    .set_properties(pd.IndexSlice['Neutral': 'Satisfied', 'Internet': 'Video'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[2], opacity=0.5)\
-                    .set_properties(pd.IndexSlice['Very satisfied', 'Нет'], color='white',
+                    .set_properties(pd.IndexSlice['Very satisfied', 'No'], color='white',
                                     background=px.colors.DEFAULT_PLOTLY_COLORS[3], opacity=0.5)
                 st.markdown(s.to_html(table_uuid="table_categories_dist"), unsafe_allow_html=True)
                 categories = '''
             <br>
             <ul>
-            <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:18px">&nbsp;1&nbsp;</span> - Полностью неудовлетворены</li>
-            <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:18px">&nbsp;2&nbsp;</span> - Частично неудовлетворены</li>
-            <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:18px">&nbsp;3&nbsp;</span> - Частично удовлетворены</li>
-            <li><span style="color:white;background-color:rgb(214, 39, 40);opacity:0.5;font-size:18px">&nbsp;4&nbsp;</span> - Полностью удовлетворены</li>
+            <li><span style="color:white;background-color:rgb(31, 119, 180);opacity:0.5;font-size:20px">&nbsp;1&nbsp;</span> - Very unsatisfied</li>
+            <li><span style="color:white;background-color:rgb(255, 127, 14);opacity:0.5;font-size:20px">&nbsp;2&nbsp;</span> - Partially unsatisfied</li>
+            <li><span style="color:white;background-color:rgb(44, 160, 44);opacity:0.5;font-size:20px">&nbsp;3&nbsp;</span> - Partially satisfied</li>
+            <li><span style="color:white;background-color:rgb(214, 39, 40);opacity:0.5;font-size:20px">&nbsp;4&nbsp;</span> - Very satisfied</li>
             </ul>
                             '''
                 st.markdown(categories, unsafe_allow_html=True)
             with c2:
                 st.markdown('&nbsp;')
-                goal_text = set_text_style('<b>Цель</b><br>', tag='p', color=MegafonColors.orangeDark, font_size=32,
+                goal_text = set_text_style('<b>Objective</b><br>', tag='p', color=MegafonColors.orangeDark, font_size=24,
                                            text_align='center')
-                goal_text += set_text_style('Выяснить, является ли разделение статистически верным?',
+                goal_text += set_text_style('Determine whether the division is statistically correct?',
                                             tag='span', font_size=24)
                 st.markdown(goal_text, unsafe_allow_html=True)
                 st.markdown('&nbsp;')
-                task_text = set_text_style('<b>Вопросы</b><br>', tag='p',
-                                           color=MegafonColors.orangeDark, font_size=32, text_align='center')
+                task_text = set_text_style('<b>Questions</b><br>', tag='p',
+                                           color=MegafonColors.orangeDark, font_size=24, text_align='center')
                 task_text += set_text_style(f"""
                 <ul>
-                <li>{set_text_style('Принадлежат ли клиенты с разными CSAT к разным популяциям?',
+                <li>{set_text_style('Do customers in the groups belong to different populations?',
                                     font_size=24)}</li>
-                <li>{set_text_style('Если клиенты с разными CSAT не принадлежат к одной популяции, '
-                                    'то по каким метрикам особенно сильно различаются?', font_size=24)}</li>
+                <li>{set_text_style('If customers do not belong to the same population, '
+                                    'what metrics do they differ in?', font_size=24)}</li>
                 </ul>
                 """, tag='span', font_size=24)
                 st.markdown(task_text, unsafe_allow_html=True)
@@ -1552,8 +1723,8 @@ match choice:
             research_data, groups, group_pairs, ci, ci_overlapping, ci_center = load_8_3()
 
             # st.markdown('&nbsp;')
-            st.markdown(set_text_style('<b>Доверительные интервалы статистик</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style('<b>Confidence intervals of statistics</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
             fig = ci_plot_8_3()
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
@@ -1573,7 +1744,7 @@ match choice:
             def plot_metric_histograms_8_4_1(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -1592,7 +1763,7 @@ match choice:
             def plot_metric_histograms_8_4_2(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -1611,7 +1782,7 @@ match choice:
             def plot_metric_histograms_8_4_3(null_distributions, statistics, research_metrics, mark_statistic):
                 return plot_metric_histograms(
                     null_distributions, statistic=statistics, metrics=research_metrics,
-                    # title=f'<b>Плотность нулевого распределения вероятностей тестовой статистики</b>', title_y=0.9,
+                    # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
                     labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
                     height=300, n_cols=3, opacity=0.5,
                     histnorm='probability density',
@@ -1621,24 +1792,24 @@ match choice:
 
             alternatives, pvalues, mark_statistic, null_distributions, statistics = load_8_4_1()
 
-            st.markdown(set_text_style(f'<b>Группы "{groups[0]}" и "{groups[1]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[0]}" и "{groups[1]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{1}-\hat{TM}_{2}')
-            c2.latex('H_0:\Delta \hat{TM}≥0')
-            c3.latex('H_1:\Delta \hat{TM}<0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{1}-\hat{TM}_{2}')
+            c2.latex(r'H_0:\Delta \hat{TM}≥0')
+            c3.latex(r'H_1:\Delta \hat{TM}<0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_8_4_1(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 0
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -1646,7 +1817,7 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_8_4_1"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Выводы:</b>', tag='p',
+            conclusion_text = set_text_style('<b>Outcomes</b>', tag='p',
                                              color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'есть значимые различия</b>', tag='span', font_size=20)
@@ -1655,24 +1826,24 @@ match choice:
             _, pvalues, mark_statistic, null_distributions, statistics = load_8_4_2()
 
             st.markdown('---')
-            st.markdown(set_text_style(f'<b>Группы "{groups[1]}" и "{groups[2]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[1]}" и "{groups[2]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{2}-\hat{TM}_{3}')
-            c2.latex('H_0:\Delta \hat{TM}≥0')
-            c3.latex('H_1:\Delta \hat{TM}<0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{2}-\hat{TM}_{3}')
+            c2.latex(r'H_0:\Delta \hat{TM}≥0')
+            c3.latex(r'H_1:\Delta \hat{TM}<0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_8_4_2(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 1
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -1680,7 +1851,7 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_8_4_2"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Вывод:</b><br>', tag='p', font_size=24,
+            conclusion_text = set_text_style('<b>Outcomes</b><br>', tag='p', font_size=24,
                                              color=MegafonColors.brandGreenDarken10, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'нет значимых различий</b>', tag='span', font_size=20)
@@ -1689,24 +1860,24 @@ match choice:
             _, pvalues, mark_statistic, null_distributions, statistics = load_8_4_3()
 
             st.markdown('---')
-            st.markdown(set_text_style(f'<b>Группы "{groups[2]}" и "{groups[3]}"</b>', text_align='center',
-                                       font_size=32, color=MegafonColors.brandPurple),
+            st.markdown(set_text_style(f'<b>Groups "{groups[2]}" и "{groups[3]}"</b>', text_align='center',
+                                       font_size=24, color=MegafonColors.brandPurple),
                         unsafe_allow_html=True)
-            st.markdown(set_text_style('<b>Гипотезы</b>',
+            st.markdown(set_text_style('<b>Hypothesis</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             c1, c2, c3 = st.columns([40, 30, 30])
             st.markdown('&nbsp;')
-            c1.latex('\Delta \hat{TM}=\hat{TM}_{3}-\hat{TM}_{4}')
-            c2.latex('H_0:\Delta \hat{TM}≥0')
-            c3.latex('H_1:\Delta \hat{TM}<0')
-            st.markdown(set_text_style('<b>Плотность нулевого распределения вероятностей тестовой статистики</b>',
+            c1.latex(r'\Delta \hat{TM}=\hat{TM}_{3}-\hat{TM}_{4}')
+            c2.latex(r'H_0:\Delta \hat{TM}≥0')
+            c3.latex(r'H_1:\Delta \hat{TM}<0')
+            st.markdown(set_text_style('<b>Density of the null probability distribution of the test statistic</b>',
                                        color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center'),
                         unsafe_allow_html=True)
             fig = plot_metric_histograms_8_4_3(null_distributions, statistics, research_metrics, mark_statistic)
             st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
             group_pair_index = 2
-            st.markdown(set_text_style(f'<b>Значения p-value статистического теста</b>', font_size=24,
+            st.markdown(set_text_style(f'<b>Statistical test p-values</b>', font_size=24,
                                        color=MegafonColors.brandGreenDarken10, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
@@ -1714,35 +1885,34 @@ match choice:
                                 caption='', col_width=400)
             st.markdown(s.to_html(table_uuid="table_pvalues_8_4_3"), unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Выводы:</b>', tag='p',
+            conclusion_text = set_text_style('<b>Outcomes</b>', tag='p',
                                              color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'есть значимые различия</b>', tag='span', font_size=20)
             st.markdown(conclusion_text, unsafe_allow_html=True)
             st.markdown('&nbsp;')
-            conclusion_text = set_text_style('<b>Выводы:</b>', tag='p',
+            conclusion_text = set_text_style('<b>Outcomes</b>', tag='p',
                                              color=MegafonColors.brandGreenDarken10, font_size=24, text_align='center')
             conclusion_text += set_text_style(f'<b>Между всеми метриками</b> тестовых групп <b>'
                                               f'есть значимые различия</b>', tag='span', font_size=20)
             st.markdown(conclusion_text, unsafe_allow_html=True)
         with tab4:
-            st.markdown(set_text_style(f'<b>Значения p-value статистических тестов</b>', font_size=32,
+            st.markdown(set_text_style(f'<b>Statistical tests p-values</b>', font_size=24,
                                        color=MegafonColors.brandPurple, text_align='center'),
                         unsafe_allow_html=True)
             s = display_pvalues(pvalues, metrics=research_metrics, alpha=alpha,
-                                caption=f'<b>Значение p-value статистических тестов</b>',
-                                opacity=0.5, col_width=180, index_width=30)
+                                caption = '', opacity=0.5, col_width=180, index_width=30)
             st.markdown(s.to_html(table_uuid="table_pvalues_8_5"), unsafe_allow_html=True)
             st.markdown('---')
-            # st.markdown(set_text_style(f'<b>Категории по причинам недовольства сервисом мобильного интернета</b>', font_size=32,
+            # st.markdown(set_text_style(f'<b>Категории по причинам недовольства сервисом мобильного интернета</b>', font_size=24,
             #                            color=MegafonColors.brandPurple, text_align='center'),
             #             unsafe_allow_html=True)
             # st.markdown('&nbsp;')
             c1, c2 = st.columns(2, gap='medium')
             with c1:
-                st.markdown(set_text_style(f'<b>Тренд метрики<br>"'
-                                           f'{research_metrics.loc["Video Streaming Download Throughput(Kbps)", "description"]}"</b>',
-                                           font_size=32, text_align='center', color=MegafonColors.brandPurple),
+                st.markdown(set_text_style(f'<b>Trend of <br>"'
+                                           f'{research_metrics.loc["Video Streaming Download Throughput(Kbps)", "name"]}"</b>',
+                                           font_size=24, text_align='center', color=MegafonColors.brandPurple),
                             unsafe_allow_html=True)
                 df = ci_center['Video Streaming Download Throughput(Kbps)'].rename('value').to_frame()
                 fig = px.scatter(
@@ -1758,19 +1928,17 @@ match choice:
                 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=False)
                 results = px.get_trendline_results(fig).iloc[0, 0]
             with c2:
-                st.markdown(set_text_style(f'<b>Выводы</b>', font_size=32,
+                st.markdown(set_text_style(f'<b>Outcomes</b>', font_size=24,
                                            color=MegafonColors.orangeDark, text_align='center'),
                             unsafe_allow_html=True)
                 conclusion_text = '''
                 <ul>
                 <li><span style="font-size:24px">Клиенты всех групп принадлежат к <b>разным популяциям</b>.</span></li>
-                <li><span style="font-size:24px">Самое сильное влияние у метрики "<b>Скорость загрузки потокового видео</b>".</span></li>
+                <li><span style="font-size:24px">Самое сильное влияние у метрики "<b>Video Streaming Download Throughput</b>".</span></li>
                 </ul>
                 '''
                 st.markdown(conclusion_text, unsafe_allow_html=True)
-
-
-    case "Заключение":
+    case "Summary":
         @st.cache_resource
         def load_9():
             with open('data/8_3.dmp', 'rb') as fp:
@@ -1778,8 +1946,8 @@ match choice:
             return data
 
         research_data, groups, group_pairs, ci, ci_overlapping, ci_center = load_9()
-        st.markdown(set_text_style(f'<b>Уровни удовлетворенности клиентов (CSAT)<br>'
-                                   f'сервисом мобильного интернета</b>', font_size=32, text_align='center',
+        st.markdown(set_text_style(f'<b>Customer satisfaction scores (CSAT)<br>'
+                                   f'with the mobile Internet service</b>', font_size=24, text_align='center',
                                    color=MegafonColors.brandPurple),
                     unsafe_allow_html=True)
         text = f"""
@@ -1792,15 +1960,14 @@ match choice:
 """
         st.markdown(text, unsafe_allow_html=True)
         st.markdown('---')
-        st.markdown(set_text_style(f'<b>Доверительные интервалы метрики<br>"'
-                                   f'{research_metrics.loc["Video Streaming Download Throughput(Kbps)", "description"]}'
-                                   f'"</b>', font_size=32, text_align='center', color=MegafonColors.brandPurple),
+        st.markdown(set_text_style(f'<b>Confidence intervals of metric<br>"'
+                                   f'{research_metrics.loc["Video Streaming Download Throughput(Kbps)", "name"]}'
+                                   f'"</b>', font_size=24, text_align='center', color=MegafonColors.brandPurple),
                     unsafe_allow_html=True)
         table = display_confidence_interval(
             ci['Video Streaming Download Throughput(Kbps)'],
             metrics=research_metrics.loc['Video Streaming Download Throughput(Kbps)'],
             caption='', caption_font_size=12, opacity=0.5, precision=1, index_width=30)
-        '851 kbit/s'
         s = display_confidence_interval(ci['Video Streaming Download Throughput(Kbps)'],
                                         metrics=research_metrics.loc['Video Streaming Download Throughput(Kbps)'],
                                         caption='', caption_font_size=12, opacity=0.5, precision=1, index_width=30)
