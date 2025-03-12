@@ -309,7 +309,7 @@ st.markdown(
 )
 s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
                     metrics=st.session_state.research_metrics, alpha=st.session_state.alpha,
-                    caption='', index_width=40, col_width=305)
+                    caption='', index_width=80, col_width=305)
 st.markdown(s.to_html(table_uuid="table_pvalues_8_4_1"), unsafe_allow_html=True)
 
 st.markdown(
