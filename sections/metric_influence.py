@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from matplotlib.pyplot import ticklabel_format
 
 from functions import (display_cat_info, plot_group_size_barchart, plot_metric_histograms,
                        plot_metric_confidence_interval, display_confidence_interval,
