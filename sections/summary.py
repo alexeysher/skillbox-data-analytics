@@ -7,8 +7,8 @@ st.markdown(
     # Summary
     
     Within this work, a research of the survey of Megafon customers was done. 
-    As a result, it was found that the **level of customer satisfaction** `CSAT` with the Mobile Internet service 
-    should be determined on a **4-point scale**:
+    As a result, it was found that the level of customer satisfaction `CSAT` with the Mobile Internet service 
+    should be determined on a 4-point scale:
     
     - <span style="color:white;background-color:{px.colors.DEFAULT_PLOTLY_COLORS[0]};opacity:0.5">
       &nbsp;&nbsp;1&nbsp;&nbsp;</span>&nbsp;&nbsp;Completely dissatisfied
