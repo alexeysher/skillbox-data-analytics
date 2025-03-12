@@ -14,17 +14,19 @@ def show_important_metric_table(metrics: pd.DataFrame):
 
 @st.cache_resource(show_spinner='Plotting...')
 def plot_metric_histograms_5_1():
-    return plot_metric_histograms(st.session_state.statistic_distributions,
-                                  statistic=st.session_state.statistic_distributions.median(),
-                                  metrics=st.session_state.research_metrics,
-                                  title='<b>Плотность распределения вероятностей статистики</b>', title_y=0.9,
-                                  labels_font_size=16,
-                                  units_font_size=16,
-                                  axes_tickfont_size=14,
-                                  height=300, n_cols=3, opacity=0.5,
-                                  histnorm='probability density',
-                                  add_kde=True, add_statistic=True, mark_confidence_interval=True,
-                                  horizontal_spacing=0.06, vertical_spacing=0.07)
+    return plot_metric_histograms(
+        st.session_state.statistic_distributions,
+        statistic=st.session_state.statistic_distributions.median(),
+        metrics=st.session_state.research_metrics,
+        title=' ', title_y=0.9,
+        labels_font_size=16,
+        units_font_size=14,
+        axes_tickfont_size=14,
+        height=300, n_cols=3, opacity=0.5,
+        histnorm='probability density',
+        add_kde=True, add_statistic=True, mark_confidence_interval=True,
+        horizontal_spacing=0.06, vertical_spacing=0.07).update_layout(
+        margin_t=60, margin_b=0)
 
 
 st.markdown(

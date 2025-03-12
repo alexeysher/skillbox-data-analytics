@@ -8,25 +8,26 @@ from auxiliary import MegafonColors
 
 def trimean_mod(data, axis=0):
     """
-    Calculates the weighted average of the median, 10th and 90th percentiles in the ratio 8:1:1 along the specified axis.
+    '''
+    Returns modified trimmer,
+    obtained weighted average of 10th, 50th and 90th percentile in 1:8:1 proportion.
+    Calculation is performing on the given axis of data sample.
 
         Parameters:
         ----------
-        data : pandas.Series, pandas.DataFrame или numpy.ndarray
-            The data set for witch trimmer is calculated.
+        data : pandas.Series, pandas.DataFrame or numpy.ndarray
+            The given data sample.
 
         axis : {0, 1, 'index', 'columns'}, default - 0
-            If equals to 0 or 'index' then the value is calculating along the rows,
-            If equals to 1 or 'columns' then the value is calculating along the columns.
-            Applicable only if data is pandas.DataFrame or numpy.array
+            If 0 or 'index' the calculation is performed on rows.
+            If 1 or 'columns' the calculation is performed on columns.
+            Is used if data is pandas.DataFrame or numpy.array
 
         Returns:
         -----------------------
-            Float value if data is это pandas.Series
-            Pandas.Series object if data is pandas.DataFrame. The indices are совпадают с индексами data
-                по противоположной выбранной оси
-            Numpy.ndarray object if data is numpy.ndarray.
-
+            Float type value if data is pandas.Series
+            Pandas.Series with index of opposite axis of data if data is pandas.DataFrame .
+            1d numpy.ndarray if data is numpy.ndarray.
     """
     if type(data) == pd.Series:
         p10 = data.quantile(0.1)
@@ -45,164 +46,161 @@ def trimean_mod(data, axis=0):
 
 
 def trimean_mod_diff(a, b, axis=0):
-    '''
-    Returns substruction of modified trimmers (for more details see 'trimean_mod' function) for two data sets.
+    """
+    Returns a difference between modified trimmers for the two given data samples.
 
         Parameters:
         ----------
-        a, b : pandas.Series, pandas.DataFrame или numpy.ndarray
-            Выборки данных, для которых рассчитывается разница модифицированных тримеров.
+        a, b : pandas.Series, pandas.DataFrame or numpy.ndarray
+            The given data samples.
 
-        axis : {0, 1, 'index', 'columns'}, по умолчанию - 0
-            Если равно 0 или 'index', то расчёт производится по строкам, 
-            если 1 или 'columns', то по столбцам.
-            Используется, если data - это pandas.DataFrame или numpy.array
+        axis  : {0, 1, 'index', 'columns'}, default - 0
+            If 0 or 'index' the calculation is performed on rows.
+            If 1 or 'columns' the calculation is performed on columns.
+            Is used if data is pandas.DataFrame or numpy.array
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-            Объект типа float, если data - это pandas.Series
-            Объект типа pandas.Series, если data - это pandas.DataFrame. Индексы совпадают с индексами data 
-                по противоложной выбранной оси
-            Объект типа 1d numpy.ndarray, если data - это numpy.ndarray.
-    '''
+            Float type value if data is pandas.Series
+            Pandas.Series with index of opposite axis of data if data is pandas.DataFrame .
+            1d numpy.ndarray if data is numpy.ndarray.
+    """
     return trimean_mod(a, axis=axis) - trimean_mod(b, axis=axis)
 
 
 def kde(data, n_points=100, special_points=None):
-    '''
-    Формирует представление Ядерной оценки плотности (ЯОП, англ. Kernel density estimate, KDE) для выборки данных
-    одного или нескольких параметров.
-    С помощью объекта типа Series может быть переданы данные о выборке значений одного параметра,
-                    для которого формируется ЯОП. В этом случае функция также возвращает объект типа Series, содержащего 
-                    В случае необходимости формирования представления ЯОП для нескольких параметров,
-                    необходимо передавать выборки их значений с помощью объекта типа DataFrame. 
-                    При этом выборки данных для параметров должны быть одинаковой длины и распределяться по столбцам.
+    """
+    Generates a Kernel Density Estimate (KDE) representation for a sample of data of one or more parameters.
+    A Series object can be used to pass data on a sample of values of one parameter,
+    for which the KDE is generated. In this case, the function also returns a Series object containing
+    If it is necessary to generate a KDE representation for several parameters,
+    it is necessary to pass samples of their values using a DataFrame object.
+    In this case, the data samples for the parameters must be of the same length and distributed across columns.
 
-
-        Параметры:
+        Parameters:
         ----------
-        data : DataFrame или Series
-            Выборка данных, для которой формируется представление ЯОП.
+        data : DataFrame or Series
+            The given data sample
 
         n_points : int
-            Количество основных (расположенных на одинаковом расстоянии) точек в возвращаемом представлении ЯОП.
+            The number of points in the returned LOP representation.
 
-        special_values : DataFrame или Series
-            Дополнительные точки (например, среднее, медиана и границы доверительного интервала)
-            для которых должны быть представлены в возвращаемом представлении ЯОП
+        special_values : DataFrame or Series
+            Additional points (e.g. mean, median, and confidence interval bounds)
+            that should be represented in the returned KDE representation
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-            Объект типа DataFrame, содержащий набор данных о представлении ЯОП.
-            В случае, если ЯОП формируется для одного параметра, и выборки данных передается с помощью объекта типа Series,
-            в результурующим наборе данных присутствует 2 столбца:
-                value - значения точек из диапазона;
-                pdf - значения ЯОП
-    '''
-    # Формируем список колонок
+            A DataFrame object containing a set of data about the KDE representation.
+            If the LOP is formed for one parameter, and the data selection is transferred using a Series object,
+            the resulting data set contains 2 columns:
+                value - the values of the points from the range;
+                pdf - the KDE values
+    """
+    # Forming a list of columns
     columns = ['value', 'pdf']
 
     if type(data) is pd.Series:
-        # Представление ЯОП формируется для одного параметра
-        # Разбиваем диапазон значений параметра в выборке на (n_points-1) равных отрезков
+        # The LOP representation is generated for one parameter
+        # We divide the range of parameter values in the sample into (n_points-1) equal segments
         values = pd.Series(np.linspace(data.min(), data.max(), n_points))
         if special_points is not None:
             values = pd.concat([values, special_points])
-        # Делаем заготовку возвращаемого датасета
+        # We prepare the returned dataset
         result = pd.DataFrame(columns=columns)
     else:
-        # Представление ЯОП формируется для нескольких параметров
-        # Разбиваем диапазон значений каждого параметра в выборке на (n_points-1) равных отрезков
+        # The LOP representation is generated for several parameters
+        # We divide the range of values of each parameter in the sample into (n_points-1) equal segments
         values = pd.DataFrame(np.linspace(data.min(), data.max(), n_points),
                               columns=data.columns)
-        # Делаем заготовку возвращаемого датасета
+        # We prepare the returned dataset
         result = pd.DataFrame(
             columns=pd.MultiIndex.from_product([columns, data.columns]))
 
-    # Добавляем в набор "специальные" значения
+    # Add "special" values to the set
     if special_points is not None:
         values = pd.concat([values, special_points])
 
-    # Находим значение представления ЯОП для сформированного набора значений параметра(-ов)
+    # Find the value of the LOP representation for the generated set of parameter(s) values
     if type(data) is pd.Series:
-        # Представление ЯОП формируется для одного параметра
+        # The LOP representation is generated for one parameter
         kde = stats.gaussian_kde(data)
         pdf = kde.pdf(values)
     else:
-        # Представление ЯОП формируется для нескольких параметров
+        # The LOP representation is generated for several parameters
         kde = data.apply(lambda s: stats.gaussian_kde(s))
         pdf = data.apply(lambda s: kde[s.name].pdf(values[s.name]))
         pdf.index = values.index
 
-    # Заполняем результрующий датасет
+    # Fill the resulting dataset
     result.index.name = 'point'
-    result['value'] = values  # Крайние точки отрезков
-    result['pdf'] = pdf  # Значения ЯОП в крайних точках отрезков
+    result['value'] = values # Endpoints of segments
+    result['pdf'] = pdf # Values of the LOP at the extreme points of the segments
 
     return result
 
 
 def my_bootstrap(data, statistic, n_resamples=9999, axis=0):
-    '''
-    Возвращает распределение заданной статистики для популяции, 
-    представленной наблюдаемой выборкой с одной или несколькими метриками,
-    с помощью метода bootstrap.
+    """
+    Returns the distribution of the given statistic for a population,
+    represented by an observed sample with one or more metrics,
+    using the bootstrap method.
 
-        Параметры:
+        Parameters:
         ----------
-        data : pandas.Series, pandas.DataFrame или numpy.ndarray
-            Наблюдаемая выборка данных.
+        data : pandas.Series, pandas.DataFrame or numpy.ndarray
+            Observed data sample.
 
         statistic : function
-            Функция, реализующая расчёт статистики по одной метрике
+            A function that implements the calculation of statistics for one metric
 
         n_resamples : int
-            Количество повторных выборок. По умолчанию - 9999
+            Number of resamples. Default is 9999
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-            Объект типа pandas.Series длиной n_resamples, если data - это pandas.Series
-            Объект типа pandas.DataFrame размерностью по выбранной оси n_resamples, если data - это pandas.DataFrame.
-                Размерность и индексы противоположной оси такая же как в `data`.
-            Объект типа numpy.ndarray размерностью по выбранной оси n_resamples, если data - это numpy.ndarray. 
-                Размерность противоположной оси такая же как в `data`.         
-    '''
+            A pandas.Series object of length n_resamples if data is a pandas.Series
+            A pandas.DataFrame object of type n_resamples along the selected axis, if data is a pandas.DataFrame.
+                The dimensions and indices of the opposite axis are the same as in `data`.
+            An object of type numpy.ndarray with dimensions along the selected axis n_resamples, if data is a numpy.ndarray.
+                The dimensions of the opposite axis are the same as in `data`.
+    """
 
     def _my_bootstrap_1d(arr_1d, statistic, n_resamples=9999):
-        '''
-        Возвращает распределение заданной статистики для популяции, представленной наблюдаемой выборкой с одной метрикой,
-        с помощью метода bootstrap.
+        """
+        Returns the distribution of a given statistic for a population represented by an observed sample with a single metric,
+        using the bootstrap method.
 
-        Параметры:
+        Parameters:
         ----------
         arr_1d : 1d numpy.ndarray
-            Одномерный массив значений метрики в наблюдаемой выборке.
+            A one-dimensional array of metric values in the observed sample.
 
         statistic : function
-            Функция, реализующая расчёт статистики
+            Function implementing the calculation of statistics
 
         n_resamples : int
-            Количество повторных выборок. По умолчанию - 9999
+            Number of resamples. Default is 9999
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-            Одномерный массив numpy.ndarray содержащий n_resamples значений статистики.
-        '''
+            A one-dimensional numpy.ndarray array containing n_resamples statistics values.
+        """
         return np.array([statistic(np.random.choice(arr_1d, arr_1d.size)) for index in range(n_resamples + 1)])
 
     if type(data) == np.ndarray:
-        # Выборка - ndarray (одна или несколько метрик)
-        # Применяем _my_bootstrap_1d для каждой метрики
+        # Sample - ndarray (one or more metrics)
+        # Apply _my_bootstrap_1d for each metric
         return np.apply_along_axis(_my_bootstrap_1d, axis, data, statistic)
     elif type(data) == pd.Series:
-        # Выборка - Series (одна метрика)
-        # Применяем к ней _my_bootstrap_1d
+        # Sample - Series (one metric)
+        # Apply _my_bootstrap_1d to it
         return pd.Series(_my_bootstrap_1d(data.values, statistic, n_resamples), name=data.name)
     else:
-        # Выборка - DataFrame (несколько метрик)
-        # Применяем _my_bootstrap_1d для значений каждой метрики
+        # Selection - DataFrame (multiple metrics)
+        # Apply _my_bootstrap_1d to each metric values
         arr = np.apply_along_axis(_my_bootstrap_1d, axis, data.values, statistic)
-        # Полученный результат преобразуем в датафрейм
+        # We transform the obtained result into a dataframe
         if axis == 0:
             return pd.DataFrame(arr, columns=data.columns)
         else:
@@ -211,145 +209,138 @@ def my_bootstrap(data, statistic, n_resamples=9999, axis=0):
 
 
 def permutation_test(data, functions, alternatives=None, n_resamples=9999, random_state=0):
-    '''
-    Реализует "Перестановочный тест" (permutation test) для двух независимых групп по одной или нескольким метрикам.
-    Является оберткой для функции permutation_test из библиотеки scipy.stats.
+    """
+    Implements a "permutation test" for two independent groups on one or more metrics.
+    It is a wrapper for the permutation_test function from the scipy.stats library.
 
-        Параметры:
+        Parameters:
         ----------
-        data : pandas.Series или pandas.DataFrame
-            Набор наблюдаемых выборок. В качестве индексов должны использоваться названия групп.
-            В DataFrame метрики должны располагаться по столбцам.
+        data : pandas.Series or pandas.DataFrame
+            A set of observed samples. Group names should be used as indices.
+            In a DataFrame, metrics must be arranged in columns.
 
-        functions : callable или pandas.Series of callable
-            Функция тестовой статистически.
-            callable, если выборки - это pandas.Series.
-            pandas.Series of callable, если выборки - это pandas.DataFrame. Индексы должны быть названиями метрик,
-            т.е. совпадать с названиями столбцов в выборках.
+        functions : callable or pandas.Series of callable
+            Test function statistically.
+            callable if samples are pandas.Series.
+            pandas.Series of callable if samples are pandas.DataFrame. Indexes should be metric names,
+            i.e. match the column names in the samples.
 
-        alternatives : {'two-sided', 'less', 'greater'} или Series of {'two-sided', 'less', 'greater'} или None. По умолчанию None
-            Тип теста: 'two-sided' или None - двухсторонний, 'less' - левосторонний, 'greater' - правосторонний
-            string, если выборки - это pandas.Series.
-            pandas.Series, если выборки - это pandas.DataFrame. Индексы должны быть названиями метрик,
-            т.е. совпадать с названиями столбцов в выборках.
+        alternatives : {'two-sided', 'less', 'greater'} or Series of {'two-sided', 'less', 'greater'} or None. Default None
+            Test type: 'two-sided' or None - two-sided, 'less' - left-sided, 'greater' - right-sided
+            string if samples are pandas.Series.
+            pandas.Series if samples are pandas.DataFrame. Indexes should be metric names,
+            i.e. match the column names in the samples.
 
         n_resamples : int
-            Количество повторных выборок. По умолчанию - 9999
+            Number of resamples. Default is 9999
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-        pvalue: float или pandas.Series
-            Значение p-value. 
-            float, если выборки - это pandas.Series
-            pandas.Series of float, если выборки - это pandas.DataFrame. Индексы - это названия метрик (столбцов) 
-            в наблюдаемых выборках.
-        null_distribution : pandas.Series или pandas.DataFrame
-            Нулевое распределение тестовой статистики.
-            pandas.Series of float, если выборки - это pandas.Series. Количество элементов - n_resamples.
-            pandas.DataFrame of float, если выборки - это pandas.DataFrame. Количество строк - n_resamples. 
-            Столбцы - названия метрик (столбцов) в наблюдаемых выборках.
-        statistic : float или pandas.Series
-            Наблюдаемое значение тестовой статистики. 
-            float, если выборки - это pandas.Series.
-            pandas.Series of float, если выборки - это pandas.DataFrame. Индексы - это названия метрик (столбцов) 
-            в наблюдаемых выборках.
-
-    '''
+        pvalue: float or pandas.Series
+            p-value meaning.
+            float if samples are pandas.Series
+            pandas.Series of float if samples are pandas.DataFrame. Indexes are names of metrics (columns)
+            in the observed samples.
+        null_distribution : pandas.Series or pandas.DataFrame
+            Null distribution of test statistics.
+            pandas.Series of float if samples are pandas.Series. Number of elements is n_resamples.
+            pandas.DataFrame of float if samples are a pandas.DataFrame. Number of rows is n_resamples.
+            Columns are the names of the metrics (columns) in the observed samples.
+        statistic : float or pandas.Series
+            The observed value of the test statistic.
+            float if samples are pandas.Series.
+            pandas.Series of float if samples are pandas.DataFrame. Indexes are names of metrics (columns)
+            in the observed samples.
+    """
 
     def _permutation_test_for_1_metric(data, function, alternative=None, n_resamples=9999):
-        '''
-        Вспомогательная функция, 
-        которая реализует "Перестановочный тест" (permutation test) по одной метрике.
+        """
+        Auxiliary function,
+        which implements the "permutation test" for one metric.
 
-        Параметры:
+        Parameters:
         ----------
         data : pandas.Series
-            Набор наблюдаемых выборок. В качестве индексов должны использоваться названия групп.
+            A set of observed samples. Group names should be used as indices.
 
         functions : callable
-            Функция тестовой статистически.
+            Test function statistically.
 
-        alternatives : {'two-sided', 'less', 'greater'} или None. По умолчанию None
-            Тип теста: 'two-sided' или None - двухсторонний, 'less' - левосторонний, 'greater' - правосторонний
-            string, если выборки - это pandas.Series.
-            pandas.Series, если выборки - это pandas.DataFrame. Индексы должны быть названиями метрик,
-            т.е. совпадать с названиями столбцов в выборках.
+        alternatives : {'two-sided', 'less', 'greater'} or None. Defaults to None
+            Test type: 'two-sided' or None - two-sided, 'less' - left-sided, 'greater' - right-sided
+            string if samples are pandas.Series.
+            pandas.Series if samples are pandas.DataFrame. Indexes should be metric names,
+            i.e. match the column names in the samples.
 
         n_resamples : int
-            Количество повторных выборок. По умолчанию - 9999
+            Number of resamples. Default is 9999
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
         pvalue: float
-            Значение p-value.
+            p-value meaning.
         null_distribution : pandas.Series
-            Нулевое распределение тестовой статистики.
+            Null distribution of test statistics.
         statistic : float
-            Наблюдаемое значение тестовой статистики. 
-        '''
-        # Применяем функцию stats.permutation_test
-        # Тип теста - независимый ('independent'), для одной метрики (vectorized=False)
+            The observed value of the test statistic.
+        """
+
+        # Apply the stats.permutation_test function
+        # Test type - independent ('independent'), for one metric (vectorized=False)
         result = stats.permutation_test([data.loc[group] for group in data.index.unique()],
                                         statistic=function,
                                         permutation_type='independent',
                                         alternative=alternative,
                                         vectorized=False,
                                         n_resamples=n_resamples)
-        # Возвращаем результат
+        # Return the result
         return result.pvalue, pd.Series(result.null_distribution), result.statistic
 
-    # Если выборка содержит данные только одной метрики, 
-    # вызываем _permutation_test_for_1_metric и возвращаем результат ее выполнения
+    # If the sample contains data for only one metric,
+    # call _permutation_test_for_1_metric and return the result of its execution
     if type(data) == pd.Series:
         return _permutation_test_for_1_metric(data, functions, alternatives, n_resamples)
 
-    # Выборка содержит данные для нескольких метрик
-    # Создаем заготовки результата
+    # The sample contains data for several metrics
+    # Create result templates
     pvalues = pd.Series(name='pvalue', index=data.columns, dtype='float')
     null_distributions = pd.DataFrame(columns=data.columns, dtype='float')
     statistics = pd.Series(name='statistic', index=data.columns, dtype='float')
-    # Проводим тесты для каждой метрики в выборке:
-    # вызываем _permutation_test_for_1_metric и сохраняем результат ее выполнения
+    # We run tests for each metric in the sample:
+    # call _permutation_test_for_1_metric and save the result of its execution
     for metric in data.columns:
-        pvalues[metric], null_distributions[metric], statistics[metric] = _permutation_test_for_1_metric(data[metric],
-                                                                                                         functions[
-                                                                                                             metric],
-                                                                                                         alternatives[
-                                                                                                             metric],
-                                                                                                         n_resamples)
-    # Возвращаем результат
+        pvalues[metric], null_distributions[metric], statistics[metric] = \
+        _permutation_test_for_1_metric(data[metric], functions[metric], alternatives[metric], n_resamples)
+    # Return the result
     return pvalues, null_distributions, statistics
 
 
 def confidence_interval(data, groups, statistic, confidence_level=0.95, n_resamples=9999):
-    '''
-    Возвращает доверительный интервал заданной статистики для одной или нескольких метрик
-    популяции, представленной наблюдаемой выборкой, с помощью метода bootstrap.
-    Является "обёрткой" для функции scipy.stats.bootstrap, которая
-
-        Параметры:
+    """
+    Returns the confidence interval of the specified statistic for one or more metrics.
+    the population represented by the observed sample using the bootstrap method.
+    It is a "wrapper" for the scipy.stats.bootstrap function, which
+    
+        Parameters:
         ----------
         data : pandas.Series, pandas.DataFrame
-            Наблюдаемая выборка данных.
-
-        groups : list[str],
-            Список исследуемых групп.
-
+            Observed data sample.
+            
         statistic : callable
-            Функция, реализующая расчёт статистики по одной метрике.
-
+            A function that implements the calculation of statistics for one metric.
+                    
         n_resamples : int
-            Количество повторных выборок. По умолчанию - 9999
-
-        Возвращаемый результат:
+            Number of resamples. Default is 9999
+                    
+        Returns:
         -----------------------
-            Объект типа pandas.Series длиной n_resamples, если data - это pandas.Series
-            Объект типа pandas.DataFrame размерностью по выбранной оси n_resamples, если data - это pandas.DataFrame.
-                Размерность и индексы противоположной оси такая же как в `data`.
-            Объект типа numpy.ndarray размерностью по выбранной оси n_resamples, если data - это numpy.ndarray.
-                Размерность противоположной оси такая же как в `data`.
-            Каждый элемент представляет собой Tupple из границ ДИ.
-    '''
+            A pandas.Series object of length n_resamples if data is a pandas.Series
+            A pandas.DataFrame object of type n_resamples along the selected axis, if data is a pandas.DataFrame.
+                The dimensions and indices of the opposite axis are the same as in `data`.
+            An object of type numpy.ndarray with dimensions along the selected axis n_resamples, if data is a numpy.ndarray.
+                The dimensions of the opposite axis are the same as in `data`.
+            Each element is a Tuple of DI boundaries.
+    """
 
     def _confidence_interval(data, statistic, confidence_level=0.95, n_resamples=9999):
         return tuple(
@@ -360,36 +351,36 @@ def confidence_interval(data, groups, statistic, confidence_level=0.95, n_resamp
         )
 
     '''
-    Возвращает доверительный интервал заданной статистики для одной метрики
-    популяции, представленной наблюдаемой выборкой, с помощью метода bootstrap.
-    Является "обёрткой" для функции scipy.stats.bootstrap, которая 
-
-        Параметры:
+    Returns the confidence interval of the given statistic for a single metric
+    the population represented by the observed sample using the bootstrap method.
+    It is a "wrapper" for the scipy.stats.bootstrap function, which
+    
+        Parameters:
         ----------
         data : pandas.Series
-            Наблюдаемая выборка данных.
+            Observed data sample.
             
         statistic : callable
-            Функция, реализующая расчёт статистики.
-
+            A function that implements the calculation of statistics.
+                    
         n_resamples : int
-            Количество повторных выборок. По умолчанию - 9999
-
-        Возвращаемый результат:
+            Number of resamples. Default is 9999
+                    
+        Returns:
         -----------------------
-            Объект типа pandas.Series длиной n_resamples. Каждый элемент представляет собой Tupple из границ ДИ.
+            A pandas.Series object of length n_resamples. Each element is a Tuple of CI bounds.
     '''
 
     if type(data) == pd.Series:
-        # В выборке данные только для одной метрики
-        # Возвращаем Series из ДИ этой метрики для всех групп
+        # The sample contains data for only one metric
+        # Return Series from DI of this metric for all groups
         return pd.Series(
             [_confidence_interval(data.loc[group], statistic, confidence_level, n_resamples)
              for group in data.index.unique()],
             name='ci', index=groups, dtype='object')
 
-    # В выборке данные только для нескольких метрик
-    # Возвращаем DataFrame из ДИ. Метрики по столбцам.
+    # The sample contains data for only a few metrics
+    # Return DataFrame from DI. Metrics by columns.
     result = [np.apply_along_axis(_confidence_interval, 0, data.loc[group],
                                   statistic, confidence_level, n_resamples).tolist()
               for group in data.index.unique()]
@@ -397,44 +388,97 @@ def confidence_interval(data, groups, statistic, confidence_level=0.95, n_resamp
                         index=groups, columns=data.columns, dtype='object')
 
 
-def confidence_interval_overlapping(confidence_interval_1, confidence_interval_2, metrics):
-    '''
-    Функция проверяет наличие пересечения двух доверительных интервалов одной или нескольких метрик.
+def confidence_interval_info(data, metrics, groups, group_pairs):
+    """
+    Function:
+    - calculates confidence intervals (ci);
+    - checks for overlapping confidence intervals (ci_overlapping) of the specified pairs of groups (group_pairs);
+    - calculates confidence interval centers (ci_center);
+    - calculates the distance between the centers of the confidence intervals (ci_center) of the given pairs of groups (group_pairs).
 
-        Параметры:
+        Parameters:
         ----------
-        confidence_interval_1, confidence_interval_2 : Series of Tupple of 2 float
-            Доверительные интервалы. Имена - названия популяций.
+        data : DataFrame or Series
+            Observed data sample.
+            When using Series, only a single metric dataset can be passed.
+            When it is necessary to calculate CI for sets of several metrics of the same size
+            DataFrame should be used. In this case, the metrics data sets should be located
+            in separate columns.
 
         metrics : DataFrame
-            Информация о метриках. Индексы - названия метрик в confidence_interval_1, confidence_interval_2.
+            Information about metrics. Indexes - names of metrics. Column 'statistic' - statistical function.
 
-        Возвращаемый результат:
+        group_pairs : List or Tuple
+            List of pairs of groups of groups for which the intersection of confidence intervals is tested and
+            distances between the centers of confidence intervals.
+
+        Returns:
         -----------------------
-            Объект типа Series of Boolean.
-            Имя - названия популяций через запятую с пробелом
-            Индексы - названия метрик (индексы строк в metrics).
-            Элементы - результат проверки пересечения
-    '''
+        ci : Series
+            Confidence intervals of groups. Indexes - names of groups (indices from data)
+
+        ci_overlapping : DataFrame
+            The presence of intersections of confidence intervals of given pairs of groups.
+
+        ci_center : Series
+            Centers of confidence intervals of groups. Indexes - names of groups (indices from data)
+
+        ci_center_diffs : DataFrame
+            Distances between the centers of confidence intervals of given pairs of groups.
+    """
+    # Calculating confidence intervals of statistics
+    ci = data.apply(lambda s: confidence_interval(s, groups, statistic=metrics.loc[s.name, 'statistic']))
+    # Checking for overlapping confidence intervals of statistics of given pairs of groups
+    ci_overlapping = pd.DataFrame([
+        confidence_interval_overlapping(ci.loc[group_pair[0]], ci.loc[group_pair[1]], metrics)
+        for group_pair in group_pairs])
+    # Calculation of confidence interval centers of statistics
+    ci_center = ci.map(lambda x: (x[0] + x[1])/2)
+    # Calculation of distances between centers of confidence intervals of statistics of given pairs of groups
+    ci_center_diffs = pd.DataFrame([
+        confidence_interval_center_diffs(ci.loc[group_pair[0]], ci.loc[group_pair[1]], metrics)
+        for group_pair in group_pairs])
+    return ci, ci_overlapping, ci_center, ci_center_diffs
+
+
+def confidence_interval_overlapping(confidence_interval_1, confidence_interval_2, metrics):
+    """
+    The function checks for the intersection of two confidence intervals of one or more metrics.
+
+        Parameters:
+        ----------
+        confidence_interval_1, confidence_interval_2 : Series of Tuple of 2 float
+            Confidence intervals. Names are names of populations.
+
+        metrics : DataFrame
+            Information about metrics. Indexes - names of metrics in confidence_interval_1, confidence_interval_2.
+
+        Returns:
+        -----------------------
+            An object of type Series of Boolean.
+            Name - names of populations separated by commas and spaces
+            Indexes are the names of metrics (row indices in metrics).
+            Elements - result of intersection check
+    """
 
     def _confidence_interval_overlapping(confidence_interval_1, confidence_interval_2):
+        """
+        The helper function checks for the intersection of confidence intervals of one metric.
+
+            Parameters:
+            ----------
+            confidence_interval_1, confidence_interval_2 : Tuple of 2 float
+                Confidence intervals. Names are names of populations.
+
+            Returns:
+            -----------------------
+                False - do not overlap, True - overlap.
+        """
         return not ((confidence_interval_1[1] < confidence_interval_2[0]) or
                     (confidence_interval_2[1] < confidence_interval_1[0]))
-        '''
-        Вспомогательная функция проверяет наличие пересечения доверительных интервалов одной метрики.
 
-            Параметры:
-            ----------
-            confidence_interval_1, confidence_interval_2 : Tupple of 2 float
-                Доверительные интервалы. Имена - названия популяций.
-
-            Возвращаемый результат:
-            -----------------------
-                False - не перекрываются, True - перекрываются.
-        '''
-
-    # Возвращаем Series of Boolean, в котором индексы - это названия метрик.
-    # Имя Series - названия популяций через запятую с пробелом
+    # Return a Series of Boolean, where the indices are the names of the metrics.
+    # Series name - population names separated by commas and spaces
     return pd.Series(
         [_confidence_interval_overlapping(confidence_interval_1[metric], confidence_interval_2[metric])
          for metric in metrics.index],
@@ -443,43 +487,43 @@ def confidence_interval_overlapping(confidence_interval_1, confidence_interval_2
 
 
 def confidence_interval_center_diffs(confidence_interval_1, confidence_interval_2, metrics):
-    '''
-    Рассчитывает расстояние между центрами двух доверительных интервалов для одной или нескольких метрик.
+    """
+    Calculates the distance between the centers of two confidence intervals for one or more metrics.
 
-        Параметры:
+        Parameters:
         ----------
-        confidence_interval_1, confidence_interval_2 : Series of Tupple of 2 float
-            Доверительные интервалы. Имена - названия популяций.
+        confidence_interval_1, confidence_interval_2 : Series of Tuple of 2 float
+            Confidence intervals. Names are names of populations.
 
         metrics : DataFrame
-            Информация о метриках. Индексы - названия метрик в confidence_interval_1, confidence_interval_2.
+            Information about metrics. Indexes - names of metrics in confidence_interval_1, confidence_interval_2.
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-            Объект типа Series of Float.
-            Имя - названия популяций через запятую с пробелом
-            Индексы - названия метрик (индексы строк в metrics).
-            Элементы - расстояние между центрами доверительных интервалов
-    '''
+            An object of type Series of Float.
+            Name - names of populations separated by commas and spaces
+            Indexes are the names of metrics (row indices in metrics).
+            Elements - distance between centers of confidence intervals
+    """
 
     def _confidence_interval_center_diff(confidence_interval_1, confidence_interval_2):
+        """
+        The helper function checks for the intersection of confidence intervals of one metric.
+
+           Parameters:
+           ----------
+           confidence_interval_1, confidence_interval_2 : Tuple of 2 float
+               Confidence intervals. Names are names of populations.
+
+           Returns:
+           -----------------------
+               Distance between the centers of the DI.
+        """
         return (confidence_interval_1[0] + confidence_interval_1[1] - confidence_interval_2[0] - confidence_interval_2[
             1]) / 2
-        '''
-        Вспомогательная функция проверяет наличие пересечения доверительных интервалов одной метрики.
 
-            Параметры:
-            ----------
-            confidence_interval_1, confidence_interval_2 : Tupple of 2 float
-                Доверительные интервалы. Имена - названия популяций.
-
-            Возвращаемый результат:
-            -----------------------
-                Расстояние между центрами ДИ.
-        '''
-
-    # Возвращаем Series of Float, в котором индексы - это названия метрик.
-    # Имя Series - названия популяций через запятую с пробелом
+    # Return a Series of Boolean, where the indices are the names of the metrics.
+    # Series name - population names separated by commas and spaces
     return pd.Series(
         [_confidence_interval_center_diff(confidence_interval_1[metric], confidence_interval_2[metric])
          for metric in metrics.index],
@@ -487,88 +531,35 @@ def confidence_interval_center_diffs(confidence_interval_1, confidence_interval_
     )
 
 
-def confidence_interval_info(data, metrics, groups, group_pairs):
-    '''
-    Функция:
-    - рассчитывает доверительные интервалы (ci);
-    - проверяет наличие перекрытий доверительных интервалов (ci_overlapping) заданных пар групп (group_pairs);
-    - рассчитывает центры доверительных интервалов (ci_center);
-    - рассчитывает расстояние между центрами доверительных интервалов (ci_center) заданных пар групп (group_pairs).
-
-        Параметры:
-        ----------
-        data : DataFrame или Series
-            Наблюдаемая выборка данных.
-            При использовании Series может быть передан набор данных только одной метрики.
-            При необходимости расчёта ДИ для наборов нескольких метрик одинакового размера
-            следует использовать DataFrame. При этом наборы данных метрик должны распологаться
-            в отдельных столбцах.
-
-        metrics : DataFrame
-            Информация о метриках. Индексы - названия метрик. Столбец 'statistic' - статистическая функция.
-
-        group_pairs : List или Tupple
-            Список пар групп групп, для которых проверяется пересечение доверительных интервалов и
-            расстояний между центрами доверительных интервалов.
-
-        Возвращаемый результат:
-        -----------------------
-        ci : Series
-            Доверительные интервалы групп. Индексы - названия групп (индексы из data)
-
-        ci_overlapping : DataFrame
-            Наличия пересечений доверительные интервалы заданных пар групп.
-
-        ci_center : Series
-            Центры доверительных интервалов групп. Индексы - названия групп (индексы из data)
-
-        ci_center_diffs : DataFrame
-            Расстояния между центрами доверительных интервалов заданных пар групп.
-    '''
-    # Расчёт доверительных интервалов статистик
-    ci = data.apply(lambda s: confidence_interval(s, groups, statistic=metrics.loc[s.name, 'statistic']))
-    # Проверка наличия перекрытия доверительных интервалов статистик заданных пар групп
-    ci_overlapping = pd.DataFrame([
-        confidence_interval_overlapping(ci.loc[group_pair[0]], ci.loc[group_pair[1]], metrics)
-        for group_pair in group_pairs])
-    # Расчёт центров доверительных интервалов статистик
-    ci_center = ci.applymap(lambda x: (x[0] + x[1]) / 2)
-    # Расчёт расстояний между центрами доверительных интервалов статистик заданных пар групп
-    ci_center_diffs = pd.DataFrame([
-        confidence_interval_center_diffs(ci.loc[group_pair[0]], ci.loc[group_pair[1]], metrics)
-        for group_pair in group_pairs])
-    return ci, ci_overlapping, ci_center, ci_center_diffs
-
-
 def display_cat_info(data):
-    '''
-    Формирует стилизованное табличное представление карты распределения клиентов 
-    по категориям оценки качества сервиса мобильного интернета и причин такой оценки.
+    """
+    Generates a stylized tabular representation of the customer distribution map
+    by categories of mobile Internet service quality assessment and reasons for such assessment.
 
-        Параметры:
+        Parameters:
         ----------
         data : DataFrame
-            Датасет сведений об категориях клиентов. Должен содержать поля 'Internet score' и 'Dissatisfaction reasons'.
+            Dataset of information about customer categories. Should contain the fields 'Internet score' and 'Dissatisfaction reasons'.
 
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
         io.formats.style.Styler
-            Стилизованное табличное представление карты распределения клиентов.
-    '''
+            A stylized tabular representation of a customer distribution map.
+    """
     df = data.groupby(['Internet score', 'Dissatisfaction reasons'], sort=False).size().unstack(
         level=1, fill_value=0)
     df.index.name = None
     df.columns.name = ''
     df = df.map(lambda x: x if x > 0 else '-')
-    s = df.style.set_table_styles([
-        {'selector': 'th:not(.index_name)',
-         'props': f'font-size: 1rem; font-weight: normal; color: white; background-color: {MegafonColors.brandPurple80};'},
-        {'selector': 'th.col_heading', 'props': 'text-align: center; width: 6.75rem;'},
-        {'selector': 'td', 'props': 'text-align: center; font-size: 1rem; font-weight: normal;'},
-        {'selector': 'th.index_name', 'props': 'border-style: hidden'}
-    ],
-       overwrite=False
+    s = df.style.set_table_styles(
+        [
+            {'selector': 'th:not(.index_name)',
+             'props': f'font-weight: normal; color: white; background-color: {MegafonColors.brandPurple80};'},
+            {'selector': 'th.col_heading', 'props': 'text-align: center; width: 9.3rem;'},
+            {'selector': 'td', 'props': 'text-align: center; font-weight: normal;'},
+            {'selector': 'th.index_name', 'props': 'border-top-style: hidden; border-left-style: hidden'}
+        ], overwrite=False
     )
     s = s.map(lambda v:
               f'color: white; background-color: {MegafonColors.brandGreen};' if v != '-'
@@ -578,69 +569,72 @@ def display_cat_info(data):
 
 def display_statistics(data, axis=0, metrics=None, precision=1, caption=None, caption_font_size=12,
                        opacity=1.0, index_width=120, col_width=130):
-    '''
-    Выводит значения статистики для одной или нескольких метрик одной или нескольких популяций 
-    в виде стилизованной таблицы с заголовком.
-    Лучшие и худщие значения для каждой метрики выделяются зеленым и красным цветом шрифта соответственно.
-    Цвет фона названия популяций задается из палитры px.colors.DEFAULT_PLOTLY_COLORS
-    по порядку их следования в наборе данных.
+    """
+    Outputs statistics values for one or more metrics from one or more populations
+    in the form of a stylized table with a heading.
+    The best and worst values for each metric are highlighted in green and red font colors, respectively.
+    The background color of the population name is set from the px.colors.DEFAULT_PLOTLY_COLORS palette
+    in the order in which they appear in the data set.
 
-        Параметры:
+        Parameters:
         ----------
         data : DataFrame
-            Набор отображаемых значений статистики. 
-            По одной оси должны распологаться названия метрик, по другой названия популяций.
+            The set of statistics values to display.
+            The names of the metrics should be located on one axis, and the names of the populations on the other.
 
-        axis : {0, 1}. По умолчанию - 0
-            Показывает, что расположено по строкам и столбцам набора данных.
-            0 - индексы - это названия популяций, данные метрик распределены по колонкам
-            1 - колонки - это названия популяций, данные метрик распределены по строкам
+        axis: {0, 1}. Default - 0
+            Shows what is located in the rows and columns of a data set.
+            0 - indices are the names of populations, metric data are distributed across columns
+            1 - columns are the names of populations, metric data are distributed across rows
 
-        precision : int. По умолчанию - 4
-            Количество знаков после запятой выводимых значений статистики.
+        precision : int. Default - 4
+            The number of decimal places for the output statistics values.
 
-        caption : string или None. По умолчанию - None
-            Заголовок таблицы
+        caption : string or None. Default is None
+            Table Header
 
-        caption_font_size : int. По умолчанию - 12
-            Размер шрифта заголовка таблицы
+        caption_font_size : int. Default - 12
+            Table Header Font Size
 
-        opacity : float. По умолчанию - 1.0
-            Уровень непрозрачности (от 0.0 до 1.0) фона названия популяций
+        opacity : float. Default is 1.0
+            Opacity level (from 0.0 to 1.0) of the population name background
 
-        index_width : int. По умолчанию - 120
-            Ширина колонки индексов
+        index_width : int. Default - 120
+            Index column width
 
-        col_width : int. По умолчанию - 130
-            Ширина колонок значений
+        col_width : int. Default - 130
+            Width of value columns
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-            Нет.
-    '''
+            No.
+    """
 
     df = data.copy()
     if axis == 0:
         df.columns = metrics['name']
-        df.columns.name = 'Метрика'
-        df.index.name = 'Группа'
+        df.columns.name = 'Metric'
+        df.index.name = 'Group'
         positive_subset = pd.IndexSlice[:, metrics.loc[metrics.impact == '+', 'name'].to_list()]
         negative_subset = pd.IndexSlice[:, metrics.loc[metrics.impact == '-', 'name'].to_list()]
     else:
         df.index = metrics['name']
-        df.index.name = 'Метрика'
-        df.columns.name = 'Группа'
+        df.index.name = 'Metric'
+        df.columns.name = 'Group'
         positive_subset = pd.IndexSlice[metrics.loc[metrics.impact == '+', 'name'].to_list(), :]
         negative_subset = pd.IndexSlice[metrics.loc[metrics.impact == '-', 'name'].to_list(), :]
 
-    style = df.style.map_index(lambda
-                                        group: f'color: white; background-color:         {px.colors.DEFAULT_PLOTLY_COLORS[df.axes[axis].get_loc(group)]}; opacity: {opacity}',
-                                    axis=axis).set_caption(caption).set_table_styles([
-        {'selector': 'caption', 'props': f'font-size:{caption_font_size}pt; text-align: center; color: black'},
-        {'selector': '.row_heading, td', 'props': f'width: {index_width}px; text-align: center;'},
-        {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center;'}
-    ], overwrite=False) \
-        .format(precision=precision)
+    style = df.style.map_index(
+        lambda group: f'color: white; '
+                      f'background-color: {px.colors.DEFAULT_PLOTLY_COLORS[df.axes[axis].get_loc(group)]}; '
+                      f'opacity: {opacity}', axis=axis
+    ).set_caption(caption).set_table_styles(
+        [
+            {'selector': 'caption', 'props': f'font-size:{caption_font_size}pt; color: black'},
+            {'selector': '.row_heading, td', 'props': f'width: {index_width}px; font-weight: normal;'},
+            {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center; font-weight: normal;'},
+            {'selector': 'th.index_name', 'props': 'border-top-style: hidden; border-left-style: hidden'}
+        ], overwrite=False).format(precision=precision)
 
     if len(positive_subset[1]) > 0:
         style = style.highlight_min(props='color: red; font-weight: bold', subset=positive_subset,
@@ -659,49 +653,49 @@ def display_statistics(data, axis=0, metrics=None, precision=1, caption=None, ca
 
 def display_pvalues(data, axis=0, metrics=None, precision=4, alpha=0.05, caption=None, caption_font_size=12,
                     opacity=1.0, index_width=120, col_width=130):
-    '''
-    Выводит значения p-value для одной или нескольких метрик одного или нескольких тестов 
-    в виде стилизованной таблицы с заголовком.
-    Значения меньше уровня значимости выделяются красным цветом шрифта.
-    Цвет фона названия популяций задается из палитры px.colors.DEFAULT_PLOTLY_COLORS
-    по порядку их следования в наборе данных.
+    """
+    Outputs p-values for one or more metrics from one or more tests.
+    in the form of a stylized table with a heading.
+    Values below the significance level are highlighted in red font.
+    The background color of the population name is set from the px.colors.DEFAULT_PLOTLY_COLORS palette
+    in the order in which they appear in the data set.
 
-        Параметры:
+        Parameters:
         ----------
         data : DataFrame
-            Набор отображаемых значений p-value. 
-            По одной оси должны распологаться названия метрик, по другой названия пар популяций через запятую с пробелом.
+            The set of displayed p-values.
+            The names of the metrics should be located on one axis, and the names of the pairs of populations, separated by a comma and a space, should be located on the other.
 
-        axis : {0, 1}. По умолчанию - 0
-            Показывает, что расположено по строкам и столбцам набора данных.
-            0 - индексы - это названия пар популяций через запятую с пробелом, данные метрик распределены по колонкам
-            1 - колонки - это названия пар популяций через запятую с пробелом, данные метрик распределены по строкам
+        axis: {0, 1}. Default - 0
+            Shows what is located in the rows and columns of a data set.
+            0 - indices are the names of population pairs separated by commas and spaces, metric data are distributed across columns
+            1 - columns are the names of population pairs separated by commas and spaces, metric data are distributed across rows
 
-        precision : int. По умолчанию - 4
-            Количество знаков после запятой выводимых значений статистики.
+        precision : int. Default - 4
+            The number of decimal places for the output statistics values.
 
-        alpha : float. По умолчанию - 0.05
-            Уровень значимости.
+        alpha : float. Default is 0.05
+            Level of significance.
 
-        caption : string или None. По умолчанию - None
-            Заголовок таблицы
+        caption : string or None. Default is None
+            Table Header
 
-        caption_font_size : int. По умолчанию - 12
-            Размер шрифта заголовка таблицы
+        caption_font_size : int. Default - 12
+            Table Header Font Size
 
-        opacity : float. По умолчанию - 1.0
-            Уровень непрозрачности (от 0.0 до 1.0) фона названия популяций
+        opacity : float. Default is 1.0
+            Opacity level (from 0.0 to 1.0) of the population name background
 
-        index_width : int. По умолчанию - 120
-            Ширина колонки индексов
+        index_width : int. Default - 120
+            Index column width
 
-        col_width : int. По умолчанию - 130
-            Ширина колонок значений
+        col_width : int. Default - 130
+            Width of value columns
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-            Нет.
-    '''
+            No.
+    """
 
     df = data.copy()
     if axis == 0:
@@ -715,21 +709,27 @@ def display_pvalues(data, axis=0, metrics=None, precision=4, alpha=0.05, caption
         groups = pd.Index(df.columns.get_level_values(0).to_list() + df.columns.get_level_values(1).to_list()
                           ).drop_duplicates()
 
-    style = df.style.map_index(lambda
-                                        group: f'color: white; background-color:         {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; opacity: {opacity}',
-                                    axis=axis, level=0).map_index(lambda
-                                                                           group: f'color: white; background-color:         {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; opacity: {opacity}',
-                                                                       axis=axis, level=1).set_caption(
-        caption).set_table_styles([
-        {'selector': 'caption', 'props': f'font-size:{caption_font_size}pt; text-align:center; color:black'},
-        {'selector': 'td', 'props': 'text-align: center; border: 1px solid lightgray; border-collapse: collapse;'},
-        {'selector': '.row_heading, td', 'props': f'width: {index_width}px; text-align: center;'},
-        {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center;'}
-    ], overwrite=False) \
-        .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=0) \
-        .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=1) \
-        .format(precision=precision) \
-        .highlight_between(right=alpha, inclusive='right', props='color: red;')
+    style = df.style.map_index(
+        lambda group: f'color: white; '
+                      f'background-color: {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; '
+                      f'opacity: {opacity}', axis=axis, level=0
+    ).map_index(
+        lambda group: f'color: white; '
+                      f'background-color: {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; '
+                      f'opacity: {opacity}', axis=axis, level=1
+    ).set_caption(
+        caption
+    ).set_table_styles(
+        [
+            {'selector': 'caption', 'props': f'font-size:{caption_font_size}pt; text-align:center; color:black'},
+            # {'selector': 'td', 'props': 'text-align: center; border: 1px solid lightgray; border-collapse: collapse;'},
+            {'selector': '.row_heading, td', 'props': f'width: {index_width}px; font-weight: normal;'},
+            {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center; font-weight: normal;'},
+            {'selector': 'th.blank', 'props': 'border-top-style: hidden; border-left-style: hidden'}
+        ], overwrite=False
+    ).format(
+        precision=precision
+    ).highlight_between(right=alpha, inclusive='right', props='color: red;')
 
     if df.axes[axis].size == 1:
         style = style.hide(axis='index')
@@ -837,20 +837,20 @@ def display_confidence_interval(values, axis=0, metrics=None, precision=1, capti
         df.loc[:, 'Hi bound'] = values.apply(lambda x: x[1]).to_numpy()
         df.loc[:, 'Midpoint'] = (df.loc[:, 'Low bound'] + df.loc[:, 'Hi bound']).to_numpy() / 2
 
-    style = df.style \
-        .map_index(lambda group: f'''color: white; background-color: 
-                            {px.colors.DEFAULT_PLOTLY_COLORS[df.axes[axis].get_loc(group)]}; 
-                            opacity: {opacity}''', axis=axis) \
-        .set_caption(caption) \
-        .set_table_styles([
-        {'selector': 'caption', 'props': f'font-size:{caption_font_size}pt; text-align:center;'},
-        {'selector': 'td', 'props': 'text-align: center; border: 1px solid lightgray; border-collapse: collapse;'},
-        {'selector': '.row_heading, td', 'props': f'width: {index_width}px; text-align: center;'},
-        {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center;'},
-    ], overwrite=False) \
-        .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=0) \
-        .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=1) \
-        .format(precision=precision)
+    style = df.style.map_index(
+        lambda group: f'color: white; '
+                      f'background-color: {px.colors.DEFAULT_PLOTLY_COLORS[df.axes[axis].get_loc(group)]}; '
+                      f'opacity: {opacity}', axis=axis
+    ).set_caption(
+        caption
+    ).set_table_styles(
+        [
+            {'selector': 'caption', 'props': f'font-size:{caption_font_size}pt; text-align:center;'},
+            {'selector': '.row_heading, td', 'props': f'width: {index_width}px; font-weight: normal;'},
+            {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center; font-weight: normal;'},
+            {'selector': 'th.index_name', 'props': 'border-top-style: hidden; border-left-style: hidden'}
+        ], overwrite=False
+    ).format(precision=precision)
 
     for positive_subset in positive_subsets:
         style = style \
@@ -871,9 +871,10 @@ def display_confidence_interval(values, axis=0, metrics=None, precision=1, capti
 
     return style
 
+
 def display_confidence_interval_overlapping(values, axis=0, metrics=None, caption='', caption_font_size=12,
                                             opacity=1.0, index_width=120, col_width=130):
-    df = values.applymap(lambda x: 'Yes' if x == 1 else 'No')
+    df = values.map(lambda x: 'Yes' if x == 1 else 'No')
     if axis == 0:
         df.index = pd.MultiIndex.from_tuples(df.index.str.split(', ').map(lambda x: tuple(x)), name=[None, None])
         df.columns = pd.Index(metrics['name'].to_list(), name=None)
@@ -885,20 +886,24 @@ def display_confidence_interval_overlapping(values, axis=0, metrics=None, captio
         groups = pd.Index(df.columns.get_level_values(0).to_list() + df.columns.get_level_values(1).to_list()
                           ).drop_duplicates()
 
-    style = df.style.map_index(lambda
-                                   group: f'color: white; background-color: {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; opacity: {opacity}',
-                               axis=axis, level=0).map_index(lambda
-                                                                             group: f'color: white; background-color: {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; opacity: {opacity}',
-                                                                       axis=axis, level=1).set_caption(
-        caption).set_table_styles([
-        {'selector': 'caption', 'props': f'font-size:{caption_font_size}pt; text-align:center; color:black'},
-        {'selector': 'td', 'props': 'text-align: center; border: 1px solid lightgray; border-collapse: collapse;'},
-        {'selector': '.row_heading, td', 'props': f'width: {index_width}px; text-align: center;'},
-        {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center;'}
-    ], overwrite=False) \
-        .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=0) \
-        .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=1) \
-        .applymap(lambda x: f'color: red;' if x == 'No' else None)
+    style = df.style.map_index(
+        lambda group: f'color: white; '
+                      f'background-color: {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; '
+                      f'opacity: {opacity}', axis=axis, level=0
+    ).map_index(
+        lambda group: f'color: white; '
+                      f'background-color: {px.colors.DEFAULT_PLOTLY_COLORS[groups.get_loc(group)]}; '
+                      f'opacity: {opacity}', axis=axis, level=1
+    ).set_caption(
+        caption
+    ).set_table_styles(
+        [
+            {'selector': 'caption', 'props': f'font-size:{caption_font_size}pt; text-align:center;'},
+            {'selector': '.row_heading, td', 'props': f'width: {index_width}px; font-weight: normal;'},
+            {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center; font-weight: normal;'},
+            {'selector': 'th.blank', 'props': 'border-top-style: hidden; border-left-style: hidden'}
+        ], overwrite=False
+    ).map(lambda x: f'color: red;' if x == 'No' else None)
 
     if df.axes[axis].size == 1:
         style = style.hide(axis='index')
@@ -913,134 +918,135 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
                            add_boxplot=False, boxplot_height_fraq=0.25, add_mean=False, add_kde=False,
                            mark_confidence_interval=False, confidence_level=0.95,
                            add_statistic=False, mark_statistic=None, statistic=None):
-    '''
-    Функция предназначена для построения гистограмм для нескольких метрик, разбитых на несколько групп.
-    Для каждой метрики создается отдельное полотно. Полотно можно распередить на несколько столбцов.
-    В каждом полотне строится несколько гистограмм для каждой группы.
-    Дополнительно над гистограммами можно разместить boxplot'ы для каждой группы,
-    аналогично тому как это делает функция px.histogram при укзании параметра margin равным boxplot.
-    Еще одной опцией является возможность построения ядерных оценок распределения (KDE)
-    для каждой группы на одном полотне с гистограммами. Построение KDE возможно только при построении
-    гистограмм плотности вероятности (probability density).
+    """
+    The function is designed to build histograms for several metrics, divided into several groups.
+    A separate canvas is created for each metric. The canvas can be divided into several columns.
+    In each canvas, several histograms are built for each group.
+    Additionally, boxplots for each group can be placed above the histograms,
+    similar to what the px.histogram function does when specifying the margin parameter equal to boxplot.
+    Another option is the ability to construct kernel distribution estimates (KDE)
+    for each group on one canvas with histograms. KDE construction is only possible when building
+    probability density histogram.
 
-    Параметры:
+    Parameters:
     ----------
-    data : DataFrame или Series
-        Выборка данных, для которой рассчитываются границы доверительного интервала.
-        При использовании Series может быть передан набор данных только одной метрики.
-        При необходимости расчёта ДИ для наборов нескольких метрик одинакового размера
-        следует использовать DataFrame. При этом наборы данных метрик должны располагаться
-        в отдельных столбцах.
+    data : DataFrame or Series
+        The data sample for which confidence interval bounds are calculated.
+        When using Series, only a single metric dataset can be passed.
+        When it is necessary to calculate CI for sets of several metrics of the same size
+        DataFrame should be used. In this case, the metrics data sets should be located
+        in separate columns.
 
     metrics : DataFrame
-        Информация о метриках. Индексы - названия метрик.
+        Information about metrics. Indexes are names of metrics.
 
-    title : string или None. По умолчанию - None
-        Заголовок диаграммы
+    title : string or None. Default is None
+        Chart Title
 
-    title_y : float или None
-        Относительное положение заголовка диаграммы по высоте (от 0.0 (внизу) до 1.0 (вверху))
+    title_y : float or None
+        Relative position of the chart title by height (from 0.0 (bottom) to 1.0 (top))
 
-    yaxis_title : string или None. По умолчанию - None
-        Заголовок оси y
+    yaxis_title : string or None. Defaults to None
+        Y-axis title
 
-    title_font_size : int. По умолчанию - 14
-        Размер шрифта заголовка диаграммы
+    title_font_size : int. Default - 14
+        Chart Title Font Size
 
-    labels_font_size : int. По умолчанию - 12
-        Размер шрифта надписей
+    labels_font_size : int. Default - 12
+        Font size of inscriptions
 
-    units_font_size : int. По умолчанию - 12
-        Размер шрифта названий единиц измерения
+    units_font_size : int. Default - 12
+        Font size of unit names
 
-    axes_tickfont_size : int. По умолчанию - 12
-        Размер шрифта меток на осях
+    axes_tickfont_size : int. Default - 12
+        Font size of axes labels
 
-    height : int или None. По умолчанию - None
-        Высота диаграммы
+    height : int or None. Default is None
+        Height of the chart
 
-    width : int или None. По умолчанию - None
-        Ширина диаграммы
+    width : int or None. Default is None
+        Diagram width
 
-    horizontal_spacing : float или None. По умолчанию - None
-        Расстояние между в столбцами полотен в долях от ширины (от 0.0 до 1.0)
+    horizontal_spacing : float or None. Defaults to None
+        Distance between columns of canvases in fractions of width (from 0.0 to 1.0)
 
-    vertical_spacing : float или None. По умолчанию - None
-        Расстояние между в строка полотен в долях от высоты (от 0.0 до 1.0)
+    vertical_spacing : float or None. Defaults to None
+        Distance between the rows of canvases in fractions of the height (from 0.0 to 1.0)
 
-    n_cols : int. По умолчанию - 1
-        Количество столбцов полотен
+    n_cols : int. Default - 1
+        Number of columns of canvases
 
-    opacity : float. По умолчанию - 0.5
-        Уровень непрозрачности (от 0.0 до 1.0) цвета столбцов
+    opacity : float. Default is 0.5
+        Opacity level (0.0 to 1.0) of the column color
 
-    histnorm : {'percent', 'probability', 'density' или 'probability density'} или None. По умолчанию - 'percent'
-        Тип гистограммы (см. plotly.express.histogram)
+    histnorm : {'percent', 'probability', 'density' or 'probability density'} or None. Defaults to 'percent'
+        Histogram type (see plotly.express.histogram)
 
-    boxplot_height_fraq : float. По умолчанию - 0.25
-        Доля высоты boxplot. Используется только, если add_boxplot=True
+    boxplot_height_fraq : float. Default is 0.25
+        Fraction of boxplot height. Only used if add_boxplot=True
 
-    add_boxplot : boolean. По умолчанию - False
-        Добавить boxplot над каждой гистограммой.
+    add_boxplot : boolean. Default is False
+        Add a boxplot above each histogram.
 
-    add_mean : boolean. По умолчанию - False
-        Добавить на boxlot отметку среднего значения. Используется только, если add_boxplot=True
+    add_mean : boolean. Default is False
+        Add a mean value marker to the boxlot. Only used if add_boxplot=True
 
-    add_kde : boolean. По умолчанию - False
-        Добавить на гистограмму кривую KDE. Используется только, если histnorm='probability density'
+    add_kde : boolean. Default is False
+        Add KDE curve to histogram. Only used if histnorm='probability density'
 
-    mark_confidence_interval : boolean. По умолчанию - False
-        Закрасить области KDE, вне доверительного интервала в цвет гистограммы с половинной прозрачностью.
-        Используется только, если add_kde=True
+    mark_confidence_interval : boolean. Default is False
+        Color KDE regions outside the confidence interval with the histogram color at half transparency.
+        Only used if add_kde=True
 
-    confidence_level : float. По умолчанию - 0.95
-        Уровень доверия. Используется только, если mark_confidence_interval=True
+    confidence_level : float. Default is 0.95
+        Confidence level. Only used if mark_confidence_interval=True
 
-    add_statistic : boolean. По умолчанию - False
-        Отметить статистику на гистограмму в виде вертикальной штриховой линии.
+    add_statistic : boolean. Default is False
+        Mark the statistics on the histogram as a vertical dashed line.
 
-    mark_statistic : {'tomin', 'tomax', 'tonearest'}. По умолчанию - False
-        Закрасить область KDE слева ('tomin') или справа ('tomax'),
-        или минимальную ('min') или максимальную ('max') по размеру в цвет гистограммы с половинной прозрачностью.
+    mark_statistic : {'tomin', 'tomax', 'tonearest'}. Default - False
+        Color the KDE area on the left ('tomin') or right ('tomax'),
+        or minimum ('min') or maximum ('max') in size in the histogram color with half transparency.
 
     statistic : Series
-        Значение статистики, отображаемой на гистограмме. Индексы - названия метрик
-        Используется, только если add_statistic=True и/или mark_statistic=True
+        The value of the statistics displayed on the histogram. Indexes are the names of the metrics.
+        Used only if add_statistic=True and/or mark_statistic=True
 
-    Возвращаемый результат:
+    Returns:
     -----------------------
-        Нет.
-    '''
+        No.
+    """
 
     def _confidence_interval(data, confidence_level=0.95):
-        '''
-        Рассчитывает границы доверительного интервала набора данных
+        """
+        Calculates the confidence interval bounds of a data set
 
-        Параметры:
+        Parameters:
         ----------
-        data : Series или DataFrame
-            Выборка данных, для которой рассчитываются границы доверительного интервала.
-            При использовании Series может быть передан набор данных только одной метрики.
-            При необходимости расчёта ДИ для наборов нескольких метрик одинакового размера
-            следует использовать DataFrame. При этом наборы данных метрик должны распологаться
-            в отдельных столбцах.
+        data : Series or DataFrame
+            The data sample for which confidence interval bounds are calculated.
+            When using Series, only a single metric dataset can be passed.
+            When it is necessary to calculate CI for sets of several metrics of the same size
+            DataFrame should be used. In this case, the metrics data sets should be located
+            in separate columns.
 
-        confidence_level : float. По умолчанию - 0.95
-            Уровень доверия.
+        confidence_level : float. Default is 0.95
+            Level of trust.
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-            Если data - это Series, то Series с двумя элементами: 'low' - нижняя граница, 'high' - верхняя граница.
-            Если data - это DataFrame, то DataFrame с двумя строками: 'low' - нижняя граница, 'high' - верхняя граница.
-        '''
+            If data is a Series, then a Series with two elements: 'low' is the lower bound, 'high' is the upper bound.
+            If data is a DataFrame, then a DataFrame with two rows: 'low' is the lower bound, 'high' is the upper bound.
+        """
+
         alpha = 1 - confidence_level
         result = data.quantile([alpha / 2, 1 - alpha / 2])
         result = result.rename({alpha / 2: 'low', 1 - alpha / 2: 'high'})
         return result
 
-    # Список метрик - это названия колонок в датасете
+    # The list of metrics is the names of the columns in the dataset
     n_metrics = metrics.shape[0]
-    # Вычисляем количество строк и их высоты
+    # Calculate the number of lines and their heights
     n_rows = int(np.ceil(n_metrics / n_cols))
     if add_boxplot:
         row_heights = [boxplot_height_fraq / n_rows, (1 - boxplot_height_fraq) / n_rows] * n_rows
@@ -1049,29 +1055,29 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
         row_heights = [1 / n_rows] * n_rows
     titles = []
     specs = []
-    # Формируем список заголовков и спецификаций графиков
+    # Generate a list of titles and chart specifications
     for index in range(0, n_metrics, n_cols):
-        titles += metrics['label'].iloc[index:index + n_cols].to_list()
+        titles += metrics['name'].iloc[index:index + n_cols].to_list()
         if add_boxplot:
             titles += [''] * n_cols
             specs.append([{'b': 0.004}] * n_cols)
         specs.append([{'b': vertical_spacing}] * n_cols)
-    # Создаем полотно с n_row*n_cols графиков
+    # Create a canvas with n_row*n_cols graphs
     fig = make_subplots(cols=n_cols, rows=n_rows, row_heights=row_heights, subplot_titles=titles,
                         horizontal_spacing=horizontal_spacing, vertical_spacing=0,
                         specs=specs)
-    # Отображаем гистограммы метрик, располагая над ними и \"ящики с усами\"
+    # Display metrics histograms with boxes and whiskers above them
     for index, metric in enumerate(metrics.index):
-        # Идем по метрикам
+        # We go by metrics
         col = index % n_cols + 1
         row = (index // n_cols) * (2 if add_boxplot else 1) + 1
-        # Добавляем гистограмму
+        # Add a histogram
         fig.add_histogram(x=data[metric], row=row + (1 if add_boxplot else 0), col=col, histnorm=histnorm,
                           bingroup=index + 1,
                           marker_color=px.colors.DEFAULT_PLOTLY_COLORS[index],
                           marker_line_color='white', marker_line_width=1,
                           opacity=opacity, showlegend=False, name=metrics.loc[metric, 'name'])
-        # К гистограмме добавляем KDE
+        # Add KDE to the histogram
         if add_kde and histnorm == 'probability density':
             special_points = None
             if mark_confidence_interval:
@@ -1120,20 +1126,20 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
                                 opacity=opacity, name=metrics.loc[metric, 'name'],
                                 showlegend=False, fill='tozeroy')
             if add_statistic and statistic is not None:
-                # Добавляем статистику
+                # Add statistics
                 fig.add_vline(x=statistic[metric], row=row + (1 if add_boxplot else 0), col=col,
                               line_color=px.colors.DEFAULT_PLOTLY_COLORS[index], line_width=2, line_dash='dash',
                               opacity=opacity)
         if add_boxplot:
-            # Добавляем \"ящик с усами\" над гистограммой
+            # Add a "box with whiskers" above the histogram
             fig.add_box(x=data[metric], row=row, col=col, marker_color=px.colors.DEFAULT_PLOTLY_COLORS[index],
                         line_width=1, name=metrics.loc[metric, 'name'],
                         boxmean=add_mean, showlegend=False)
-            # У \"ящиков с усами\" устанавливаем  такой же диапазон значений по оси x как у гисторграмм,
-            # показываем сетку по оси x, но скрываем на ней метки
+            # For "boxes with whiskers" we set the same range of values on the x-axis as for the histograms,
+            # show the grid on the x axis, but hide the labels on it
             fig.update_xaxes(matches=list(fig.select_traces(row=row + 1, col=col))[0].xaxis,
                              showgrid=True, showticklabels=False, row=row, col=col)
-            # У \"ящиков с усами\" скрываем название оси y и метки на ней
+            # For \"boxes with whiskers\" we hide the y-axis title and labels on it
             fig.update_yaxes(title='', row=row, col=col, showticklabels=False)
         fig.update_xaxes(title=metrics['units'].iloc[index], title_font_size=units_font_size,
                          row=row + (1 if add_boxplot else 0), col=col)
@@ -1144,10 +1150,9 @@ def plot_metric_histograms(data, metrics, title=None, title_y=None, yaxis_title=
     fig.update_yaxes(tickfont_size=axes_tickfont_size)
     fig.update_annotations(font_size=labels_font_size)
     fig.update_layout(barmode='overlay',
-                      # title=title, title_font_size=title_font_size,
-                      # title_x=0.5, title_y=title_y, title_xanchor='center',
-                      width=width, height=height,
-                      margin_l=0, margin_r=0, margin_t=60, margin_b=60)
+                      title=title, title_font_size=title_font_size,
+                      title_x=0.5, title_y=title_y, title_xanchor='center',
+                      width=width, height=height)
     return fig
 
 
@@ -1155,86 +1160,86 @@ def plot_metric_confidence_interval(data, metrics, title=None, title_y=None, yax
                                     title_font_size=14, labels_font_size=12, units_font_size=12, axes_tickfont_size=12,
                                     height=None, width=None, horizontal_spacing=None, vertical_spacing=None,
                                     n_cols=1, opacity=0.5):
-    '''
-    Функция предназначена для построения доверительных интервалов для нескольких метрик нескольких групп.
-    Для каждой метрики создается отдельное полотно. Полотно можно распередить на несколько столбцов.
-    Доверительный интевал указывается в виде горизонтального отрезка с вертикальными отсечками на концах.
-    Центр доверительного интервала выделяется точкой.
+    """
+    The function is designed to construct confidence intervals for several metrics of several groups.
+    A separate canvas is created for each metric. The canvas can be divided into several columns.
+    The confidence interval is indicated as a horizontal segment with vertical cutoffs at the ends.
+    The center of the confidence interval is highlighted by a dot.
 
-        Параметры:
+        Parameters:
         ----------
-        data : pandas.Series или pandas.DataFrame
-            Конфиденциальные интервалы популяций.
-            pandas.Series - для построения ДИ для одной метрики
-            pandas.DataFrame - для построения ДИ для нескольких метрик. Данные метрик располагаются в столбцах. 
-            В качестве индекса датасета должны использоваться названия популяций.
+        data : pandas.Series or pandas.DataFrame
+            Confidential intervals of populations.
+            pandas.Series - for constructing CI for one metric
+            pandas.DataFrame - for constructing CI for several metrics. Metric data are arranged in columns.
+            Population names should be used as the dataset index.
 
         metrics : DataFrame
-            Информация о метриках. Индексы - названия метрик.
+            Information about metrics. Indexes are names of metrics.
 
-        title : string или None. По умолчанию - None
-            Заголовок диаграммы
+        title : string or None. Default is None
+            Chart Title
 
-        title_y : float или None
-            Относительное положение заголовока диаграммы по высоте (от 0.0 (внизу) до 1.0 (вверху))
+        title_y : float or None
+            Relative position of the chart title by height (from 0.0 (bottom) to 1.0 (top))
 
-        title_font_size : int. По умолчанию - 14
-            Размер шрифта заголовка диаграммы
+        title_font_size : int. Default - 14
+            Chart Title Font Size
 
-        labels_font_size : int. По умолчанию - 12
-            Размер шрифта надписей
+        labels_font_size : int. Default - 12
+            Font size of inscriptions
 
-        units_font_size : int. По умолчанию - 12
-            Размер шрифта названий единиц измерения
+        units_font_size : int. Default - 12
+            Font size of unit names
 
-        axes_tickfont_size : int. По умолчанию - 12
-            Размер шрифта меток на осях
+        axes_tickfont_size : int. Default - 12
+            Font size of axes labels
 
-        height : int или None. По умолчанию - None
-            Высота диаграммы
+        height : int or None. Default is None
+            Height of the chart
 
-        width : int или None. По умолчанию - None
-            Ширина диаграммы
+        width : int or None. Default is None
+            Diagram width
 
-        horizontal_spacing : float или None. По умолчанию - None
-            Расстояние между в столбцами полотен в долях от ширины (от 0.0 до 1.0)
+        horizontal_spacing : float or None. Defaults to None
+            Distance between columns of canvases in fractions of width (from 0.0 to 1.0)
 
-        vertical_spacing : float или None. По умолчанию - None
-            Расстояние между в строка полотен в долях от высоты (от 0.0 до 1.0)
+        vertical_spacing : float or None. Defaults to None
+            Distance between the rows of canvases in fractions of the height (from 0.0 to 1.0)
 
-        n_cols : int. По умолчанию - 1
-            Количество столбцов полотен
+        n_cols : int. Default - 1
+            Number of columns of canvases
 
-        opacity : float. По умолчанию - 0.5
-            Уровень непрозрачности (от 0.0 до 1.0) цвета столбцов
+        opacity : float. Default is 0.5
+            Opacity level (0.0 to 1.0) of the column color
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-            Нет.
-    '''
-    # Вычисляем количество строк и их высоты
+            No.
+    """
+    # Calculate the number of lines and their heights
     n_rows = int(np.ceil(metrics.shape[0] / n_cols))
     row_heights = [1 / n_rows] * n_rows
     titles = []
     specs = []
-    # Формируем список заголовков и спецификаций графиков
+    # Generate a list of titles and chart specifications
     for index in range(0, metrics.shape[0], n_cols):
-        titles += (metrics.iloc[index:index + n_cols, :]['label'].to_list())
+        titles += (metrics.iloc[index:index + n_cols, :]['name'].to_list())
         if vertical_spacing:
             specs.append([{'b': vertical_spacing}] * n_cols)
         else:
             specs.append([{}] * n_cols)
-    # Создаем полотно с n_row*n_cols графиков
+    # Create a canvas with n_row*n_cols graphs
     fig = make_subplots(cols=n_cols, rows=n_rows, row_heights=row_heights,
                         subplot_titles=titles, specs=specs,
                         horizontal_spacing=horizontal_spacing, vertical_spacing=0.004)
-    # Отображаем точечный график метрик, располагая над ними и \"ящики с усами\"
+    # Display a scatter plot of metrics, placing boxes with whiskers above them
     for index, metric in enumerate(metrics.index):
-        # Идем по метрикам
+        # We go by metrics
         col = index % n_cols + 1
         row = index // n_cols + 1
         if type(data) == pd.Series:
-            # Добавляем точечный график на полотно
+            # Add a dot plot to the canvas
             fig.add_scatter(x=[(data[metric][0] + data[metric][1]) / 2], y=[0],
                             error_x={'type': 'constant', 'value': abs(data[metric][0] - data[metric][1]) / 2},
                             row=row, col=col, name='',
@@ -1242,7 +1247,7 @@ def plot_metric_confidence_interval(data, metrics, title=None, title_y=None, yax
                             marker_line_color='white', marker_line_width=1,
                             opacity=opacity, showlegend=False)
         else:
-            # Добавляем точечный для каждой группы
+            # Add a dot for each group
             for group_index, group in enumerate(data.index.unique()):
                 fig.add_scatter(x=[(data.loc[group, metric][0] + data.loc[group, metric][1]) / 2], y=[-group_index],
                                 error_x={'type': 'constant',
@@ -1258,9 +1263,10 @@ def plot_metric_confidence_interval(data, metrics, title=None, title_y=None, yax
     fig.update_xaxes(tickfont_size=axes_tickfont_size)
     fig.update_yaxes(visible=False, tickfont_size=axes_tickfont_size)
     fig.update_annotations(font_size=labels_font_size, y=1.1)
-    fig.update_layout(title=title, title_y=title_y, title_font_size=title_font_size, title_x=0.5,
-                      width=width, height=height, margin_l=10, margin_r=10, margin_t=60, margin_b=60,
-                      legend_font_size=labels_font_size, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    fig.update_layout(
+        title=title, title_y=title_y, title_font_size=title_font_size, title_x=0.5,
+        width=width, height=height,
+        legend_font_size=labels_font_size, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     return fig
 
 
@@ -1268,57 +1274,57 @@ def plot_group_size_barchart(data, title=None, title_y=None, title_font_size=14,
                              labels_font_size=12, xaxis_title=None, yaxis_title=None,
                              axes_title_font_size=12, axes_tickfont_size=12,
                              height=None, width=None):
-    '''
-    Функция строит столбчатую диаграмму, отображающую размеры групп, представленных в наборе данных.
+    """
+    The function plots a bar chart that displays the sizes of the groups present in the data set.
 
-        Параметры:
+        Parameters:
         ----------
         data : DataFrame
-            Набор данных. В качестве индекса датасета должны использоваться названия групп.
+            Dataset. Group names should be used as the dataset index.
 
-        title : string или None. По умолчанию - None
-            Заголовок диаграммы
+        title : string or None. Default is None
+            Chart Title
 
-        title_y : float или None
-            Относительное положение заголовока диаграммы по высоте (от 0.0 (внизу) до 1.0 (вверху))
+        title_y : float or None
+            Relative position of the chart title by height (from 0.0 (bottom) to 1.0 (top))
 
-        title_font_size : int. По умолчанию - 14
-            Размер шрифта заголовка диаграммы
+        title_font_size : int. Default - 14
+            Chart Title Font Size
 
-        opacity : float. По умолчанию - 0.5
-            Уровень непрозрачности (от 0.0 до 1.0) цвета столбцов
+        opacity : float. Default is 0.5
+            Opacity level (0.0 to 1.0) of the column color
 
-        orientation : {'h', 'v'}. По умолчанию - 'h'
-            Ориентация диаграммы: 'h'-горизонтальная, 'v'-вертикальная
+        orientation : {'h', 'v'}. Default is 'h'
+            Chart orientation: 'h'-horizontal, 'v'-vertical
 
-        labels_font_size : int. По умолчанию - 12
-            Размер шрифта надписей
+        labels_font_size : int. Default - 12
+            Font size of inscriptions
 
-        xaxis_title : string или None. По умолчанию - None
-            Заголовок оси x
+        xaxis_title : string or None. Defaults to None
+            x-axis title
 
-        yaxis_title : string или None. По умолчанию - None
-            Заголовок оси y
+        yaxis_title : string or None. Defaults to None
+            Y-axis title
 
-        axes_title_font_size : int. По умолчанию - 12
-            Размер шрифта названий осей
+        axes_title_font_size : int. Default - 12
+            Axis Title Font Size
 
-        axes_tickfont_size : int. По умолчанию - 12
-            Размер шрифта меток на осях
+        axes_tickfont_size : int. Default - 12
+            Font size of axes labels
 
-        height : int или None. По умолчанию - None
-            Высота диаграммы
+        height : int or None. Default is None
+            Height of the chart
 
-        width : int или None. По умолчанию - None
-            Ширина диаграммы
+        width : int or None. Default is None
+            Diagram width
 
-        Возвращаемый результат:
+        Returns:
         -----------------------
-            Нет.
-    '''
+            No.
+    """
 
-    # Строим столбчатую диаграмму
-    # Если диаграмма располагается горизонтально, то меняем порядок индексов на обратный
+    # Build a bar chart
+    # If the diagram is horizontal, then we change the order of the indices to the reverse
     df = data.index if orientation == 'v' else data.index[::-1]
     colors = px.colors.DEFAULT_PLOTLY_COLORS[:df.nunique()]
     if orientation == 'h':
@@ -1328,8 +1334,7 @@ def plot_group_size_barchart(data, title=None, title_y=None, title_font_size=14,
                       marker_color=colors, showlegend=False)
     fig.update_layout(bargap=0.2, boxgroupgap=0.2,
                       title_font_size=title_font_size,
-                      title_x=0.5, title_y=title_y,
-                      margin_t=60, margin_b=60)
+                      title_x=0.5, title_y=title_y)
     fig.update_xaxes(title=xaxis_title, title_font_size=axes_title_font_size, tickfont_size=axes_tickfont_size)
     fig.update_yaxes(title=yaxis_title, title_font_size=axes_title_font_size, tickfont_size=axes_tickfont_size)
     fig.update_annotations(font_size=labels_font_size)

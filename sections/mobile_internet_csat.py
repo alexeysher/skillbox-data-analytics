@@ -7,14 +7,6 @@ from functions import (display_cat_info, plot_group_size_barchart, plot_metric_h
 
 
 @st.cache_resource(show_spinner='Plotting...')
-def plot_metric_confidence_interval_8_3():
-    return plot_metric_confidence_interval(ci, metrics=st.session_state.research_metrics,
-                                           title='<b>Confidence intervals of metric statistics</b>',
-                                           height=230, n_cols=3,
-                                           horizontal_spacing=0.04, vertical_spacing=0.07)
-
-
-@st.cache_resource(show_spinner='Plotting...')
 def plot_group_size_barchart_8_3():
     return plot_group_size_barchart(
         research_data,
@@ -25,71 +17,69 @@ def plot_group_size_barchart_8_3():
         axes_title_font_size=14,
         width=600,
         height=320
-    )
-
-
-@st.cache_resource(show_spinner='Displaying...')
-def display_confidence_interval_overlapping_8_3():
-    return display_confidence_interval_overlapping(
-        ci_overlapping, metrics=st.session_state.research_metrics,
-        # caption='<b>Overlapping confidence intervals of the statistics</b>',
-        opacity=0.5, index_width=160, col_width=185)
+    ).update_layout(margin_t=0, margin_b=0)
 
 
 @st.cache_resource(show_spinner='Plotting...')
-def ci_plot_8_3():
-    return plot_metric_confidence_interval(ci, metrics=st.session_state.research_metrics,
-                                           title='', height=300, n_cols=3,
-                                           horizontal_spacing=0.04, vertical_spacing=0.07,
-                                           labels_font_size=16, axes_tickfont_size=14, units_font_size=14)
+def plot_metric_confidence_interval_8_3():
+    return plot_metric_confidence_interval(
+        ci, metrics=st.session_state.research_metrics,
+        title='', height=300, n_cols=3,
+        horizontal_spacing=0.04, vertical_spacing=0.07,
+        labels_font_size=16, axes_tickfont_size=14, units_font_size=14
+    ).update_layout(margin_t=60, margin_b=60)
 
 
 @st.cache_resource(show_spinner='Plotting...')
 def plot_metric_histograms_8_4_1(null_distributions, statistics, research_metrics, mark_statistic):
     return plot_metric_histograms(
         null_distributions, statistic=statistics, metrics=research_metrics,
-        # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
+        title=f' ', title_y=0.9,
         labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
         height=300, n_cols=3, opacity=0.5,
         histnorm='probability density',
         add_kde=True, add_statistic=True, mark_statistic=mark_statistic,
-        horizontal_spacing=0.08, vertical_spacing=0.07)
+        horizontal_spacing=0.08, vertical_spacing=0.07
+    ).update_layout(margin_t=60, margin_b=60)
 
 
 @st.cache_resource(show_spinner='Plotting...')
 def plot_metric_histograms_8_4_2(null_distributions, statistics, research_metrics, mark_statistic):
     return plot_metric_histograms(
         null_distributions, statistic=statistics, metrics=research_metrics,
-        # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
+        title=f' ', title_y=0.9,
         labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
         height=300, n_cols=3, opacity=0.5,
         histnorm='probability density',
         add_kde=True, add_statistic=True, mark_statistic=mark_statistic,
-        horizontal_spacing=0.08, vertical_spacing=0.07)
+        horizontal_spacing=0.08, vertical_spacing=0.07
+    ).update_layout(margin_t=60, margin_b=60)
 
 
 @st.cache_resource(show_spinner='Plotting...')
 def plot_metric_histograms_8_4_3(null_distributions, statistics, research_metrics, mark_statistic):
     return plot_metric_histograms(
         null_distributions, statistic=statistics, metrics=research_metrics,
-        # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
+        title=f' ', title_y=0.9,
         labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
         height=300, n_cols=3, opacity=0.5,
         histnorm='probability density',
         add_kde=True, add_statistic=True, mark_statistic=mark_statistic,
-        horizontal_spacing=0.08, vertical_spacing=0.07)
+        horizontal_spacing=0.08, vertical_spacing=0.07
+    ).update_layout(margin_t=60, margin_b=60)
 
 
 @st.cache_resource(show_spinner='Plotting...')
 def plot_metric_histograms_8_4_4(null_distributions, statistics, research_metrics, mark_statistic):
     return plot_metric_histograms(
         null_distributions, statistic=statistics, metrics=research_metrics,
-        # title=f'<b>Density of the null probability distribution of the test statistic</b>', title_y=0.9,
+        title=f' ', title_y=0.9,
         labels_font_size=16, axes_tickfont_size=14, units_font_size=14,
         height=300, n_cols=3, opacity=0.5,
         histnorm='probability density',
         add_kde=True, add_statistic=True, mark_statistic=mark_statistic,
-        horizontal_spacing=0.08, vertical_spacing=0.07)
+        horizontal_spacing=0.08, vertical_spacing=0.07
+    ).update_layout(margin_t=60, margin_b=60)
 
 
 st.markdown(
@@ -205,11 +195,11 @@ st.markdown(
     '''
 )
 
-fig = ci_plot_8_3()
+fig = plot_metric_confidence_interval_8_3()
 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
 s = display_confidence_interval(ci, metrics=st.session_state.research_metrics,
                                 caption='', caption_font_size=12,
-                                opacity=0.5, precision=1, index_width=40, col_width=105)
+                                opacity=0.5, precision=1, index_width=35, col_width=105)
 st.markdown(s.to_html(table_uuid="table_categories_dist_8_3"), unsafe_allow_html=True)
 
 st.markdown(
@@ -243,7 +233,11 @@ st.markdown(
     '''
 )
 
-s = display_confidence_interval_overlapping_8_3()
+s = display_confidence_interval_overlapping(
+    ci_overlapping, metrics=st.session_state.research_metrics,
+    # caption='<b>Overlapping confidence intervals of the statistics</b>',
+    opacity=0.5, index_width=35, col_width=185)
+
 st.markdown(s.to_html(table_uuid="table_confidence_interval_overlapping_8_3"), unsafe_allow_html=True)
 
 st.markdown(
@@ -309,7 +303,7 @@ st.markdown(
 )
 s = display_pvalues(pvalues.loc[', '.join(group_pairs[group_pair_index])].to_frame().T,
                     metrics=st.session_state.research_metrics, alpha=st.session_state.alpha,
-                    caption='', index_width=80, col_width=305)
+                    caption='', index_width=35, col_width=305)
 st.markdown(s.to_html(table_uuid="table_pvalues_8_4_1"), unsafe_allow_html=True)
 
 st.markdown(
@@ -501,7 +495,7 @@ st.markdown(
 
 s = display_pvalues(pvalues,
                     metrics=st.session_state.research_metrics, alpha=st.session_state.alpha,
-                    caption='', index_width=160, col_width=305, opacity=0.5)
+                    caption='', index_width=35, col_width=305, opacity=0.5)
 st.markdown(s.to_html(table_uuid="table_pvalues_8_5"), unsafe_allow_html=True)
 
 st.markdown(

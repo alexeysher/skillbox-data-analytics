@@ -10,15 +10,12 @@ def plot_csat_dist_10(data: pd.DataFrame):
     fig = px.histogram(data, x='Q1', histnorm='percent', opacity=0.5)
     fig.update_traces(texttemplate="%{y:.1f}%", hovertemplate='%{x} - %{y:.1f}%',
                       marker_color=px.colors.DEFAULT_PLOTLY_COLORS)
-    fig.update_layout(font_family="Calibri", font_color=MegafonColors.scantBlue2, font_size=14,
-                      # title=None, title_x=0.5, title_y=0.91, title_xanchor='center',
-                      # title_font_size=20, title_font_color=MegafonColors.scantBlue2,
-                      height=400,
-                      bargap=0.2, margin_l=0, margin_r=0, margin_b=0, margin_t=0)
+    fig.update_layout(font_color=MegafonColors.scantBlue2, font_size=14,
+                      height=400, bargap=0.2)
     fig.update_xaxes(title='', tickvals=data['Q1'].sort_values().unique(),
-                     title_font_color=MegafonColors.brandPurple, tickfont_size=14)
+                     tickfont_size=14)
     fig.update_yaxes(title='',
-                     title_font_color=MegafonColors.brandPurple, tickfont_size=14)
+                     tickfont_size=14)
     return fig
 
 
@@ -28,13 +25,11 @@ def plot_csat_dist_5(data: pd.DataFrame):
     fig = px.histogram(s, x='Q1', histnorm='percent', opacity=0.5)
     fig.update_traces(texttemplate="%{y:.1f}%", hovertemplate='%{x} - %{y:.1f}%',
                       marker_color=px.colors.DEFAULT_PLOTLY_COLORS)
-    fig.update_layout(font_family="Calibri", font_color=MegafonColors.content, font_size=14,
-                      # title='5-бальная шкала', title_x=0.5, title_y=0.91, title_xanchor='center',
-                      # title_font_size=20, title_font_color=MegafonColors.scantBlue2,
+    fig.update_layout(font_color=MegafonColors.content, font_size=14,
                       height=400,
-                      bargap=0.2, margin_l=0, margin_r=0, margin_b=0, margin_t=0)
-    fig.update_xaxes(title='', title_font_color=MegafonColors.brandPurple, tickfont_size=14)
-    fig.update_yaxes(title='', title_font_color=MegafonColors.brandPurple, tickfont_size=14)
+                      bargap=0.2)
+    fig.update_xaxes(title='', tickfont_size=14)
+    fig.update_yaxes(title='', tickfont_size=14)
     return fig
 
 
@@ -47,7 +42,7 @@ def plot_reason_dist(data: pd.DataFrame):
         "4 - Slow mobile Internet", "5 - Slow video loading",
         "6 - Difficult to answer", "7 - Your own option"
     ], dtype=float)
-    s.index = s.index.map(lambda x: wrap_text(x, 40))
+    s.index = s.index.map(lambda x: wrap_text(x, 50))
     for index in range(s.size):
         s.iloc[index] = data[data['Q1'] <= 8]['Q2'].str.contains(str(index)).sum()
     s = s / s.sum() * 100
@@ -55,13 +50,13 @@ def plot_reason_dist(data: pd.DataFrame):
     fig = px.bar(s, orientation='h', opacity=0.5)
     fig.update_traces(texttemplate="%{x:.1f}%", hovertemplate='%{y} - %{x:.1f}%',
                       marker_color=px.colors.DEFAULT_PLOTLY_COLORS)
-    fig.update_layout(font_family="Calibri", font_color=MegafonColors.brandPurple, font_size=14,
-                      # title='Исходные', title_x=0.5, title_y=0.95, title_xanchor='center',
-                      # title_font_size=20, title_font_color=MegafonColors.scantBlue2,
-                      showlegend=False, height=450,
-                      bargap=0.3, margin_l=0, margin_r=0, margin_t=0, margin_b=0)
-    fig.update_xaxes(title='', title_font_color=MegafonColors.brandPurple, tickfont_size=16)
-    fig.update_yaxes(title='', title_font_color=MegafonColors.brandPurple, tickfont_size=16)
+    fig.update_layout(
+        height = 500,
+        showlegend=False,
+        bargap=0.3, font_size=14
+    )
+    fig.update_xaxes(title='', tickfont_size=14)
+    fig.update_yaxes(title='', tickfont_size=14)
     return fig
 
 
@@ -77,13 +72,13 @@ def plot_reason_combo_dist(data: pd.DataFrame):
     fig = px.bar(s, orientation='h', opacity=0.5)
     fig.update_traces(texttemplate="%{x:.1f}%", hovertemplate='%{y} - %{x:.1f}%',
                       marker_color=px.colors.DEFAULT_PLOTLY_COLORS)
-    fig.update_layout(font_family="Calibri", font_color=MegafonColors.brandPurple, font_size=16,
-                      # title='Объединенные', title_x=0.5, title_y=0.95, title_xanchor='center',
-                      # title_font_size=20, title_font_color=MegafonColors.scantBlue2,
-                      showlegend=False, height=250,
-                      bargap=0.3, margin_l=0, margin_r=0, margin_t=0, margin_b=0)
-    fig.update_xaxes(title='', title_font_color=MegafonColors.brandPurple, tickfont_size=16)
-    fig.update_yaxes(title='', title_font_color=MegafonColors.brandPurple, tickfont_size=16)
+    fig.update_layout(
+        font_size = 14,
+        height = 330,
+        showlegend=False,
+        bargap=0.3)
+    fig.update_xaxes(title='', tickfont_size=14)
+    fig.update_yaxes(title='', tickfont_size=14)
     return fig
 
 
@@ -124,14 +119,12 @@ def show_metric_impact_legend():
 def plot_all_metric_histograms(data: pd.DataFrame, metrics: pd.DataFrame):
     fig = plot_metric_histograms(
         data, metrics,
-        # title='<b>Плотность распределения вероятностей метрик в наблюдаемой выборке</b>',
-        # title_y=0.95, title_font_size=24,
-        # labels_font_size=20,
-        # axes_tickfont_size=14,
+        title=' ',
+        labels_font_size=14,
         height=700, boxplot_height_fraq=0.15, n_cols=4, opacity=0.5,
         histnorm='probability density',
         add_boxplot=True, add_kde=True, add_mean=True,
-        horizontal_spacing=0.07, vertical_spacing=0.15)
+        horizontal_spacing=0.07, vertical_spacing=0.15).update_layout(margin_t=60, margin_b=0)
     return fig
 
 

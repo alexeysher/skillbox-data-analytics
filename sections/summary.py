@@ -33,5 +33,6 @@ table = display_confidence_interval(
     caption='', caption_font_size=12, opacity=0.5, precision=1, index_width=30)
 s = display_confidence_interval(ci['Video Streaming Download Throughput(Kbps)'],
                                 metrics=st.session_state.research_metrics.loc['Video Streaming Download Throughput(Kbps)'],
-                                caption='', caption_font_size=12, opacity=0.5, precision=1, index_width=30)
+                                caption='', caption_font_size=12, opacity=0.5, precision=1,
+                                index_width=30, col_width=105)
 st.markdown(s.to_html(table_uuid="table_pvalues_9"), unsafe_allow_html=True)
