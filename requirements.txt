@@ -6,3 +6,4 @@ scipy~=1.15.1
 protobuf~=5.29.3
 google-cloud-storage~=2.19.0
 google-auth~=2.38.0
+statsmodels~=0.13.5
