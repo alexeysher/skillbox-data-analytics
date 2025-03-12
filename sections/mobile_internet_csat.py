@@ -209,7 +209,7 @@ fig = ci_plot_8_3()
 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
 s = display_confidence_interval(ci, metrics=st.session_state.research_metrics,
                                 caption='', caption_font_size=12,
-                                opacity=0.5, precision=1, index_width=60, col_width=105)
+                                opacity=0.5, precision=1, index_width=40, col_width=105)
 st.markdown(s.to_html(table_uuid="table_categories_dist_8_3"), unsafe_allow_html=True)
 
 st.markdown(
