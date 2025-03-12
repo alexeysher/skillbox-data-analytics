@@ -1,4 +1,9 @@
 import streamlit as st
+import streamlit.components.v1 as components
+from google.cloud import storage
+from google.oauth2 import service_account
+from pickle import load
+from pathlib import Path
 import textwrap
 
 
@@ -21,6 +26,84 @@ class MegafonColors:
     spbSky2 = '#d8d8d8'
     spbSky3 = '#999'
     orangeDark = '#e39338'
+
+
+def connect_gcs(
+        credential_info,
+        bucket_id: str,
+) -> storage.Bucket:
+    """
+    Establish connection to Bucket with given ID on Google Cloud Storage using given Credentials
+    """
+    credentials = service_account.Credentials.from_service_account_info(credential_info)
+    storage_client = storage.Client(credential_info['project_id'], credentials=credentials)
+    return storage_client.bucket(bucket_id)
+
+
+def load_data_from_gcs(file_name: str, bucket: storage.Bucket, data_path: str):
+    """
+    Loads data from pickle-file in the given Bucket on Google Cloud Storage
+    """
+    file_path = f'{data_path}/{file_name}'
+    blob = bucket.blob(file_path)
+    blob.download_to_filename(file_name)
+    with open(file_name, 'rb') as fp:
+        data = load(fp)
+    Path(file_name).unlink()
+    return data
+
+
+def css_styling():
+    """
+    Styles UI.
+    """
+    st.html(f"""
+    <style>
+        MainMenu {{visibility: hidden;}}
+        # header {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
+        .st-emotion-cache-15fru4 {{
+            font-size: 0.75em;
+        }}
+        .st-emotion-cache-1104ytp {{
+            font-size: 1.0rem;
+        }}
+        .st-emotion-cache-t1wise {{
+            padding-top: 4rem;
+        }}
+        .st-emotion-cache-1104ytp h1 {{
+            color: {MegafonColors.brandGreen};
+            # font-size: 2.5rem;
+            # font-weight: strong;
+            # padding: 1.25rem 0px 1rem;
+        }}
+        .st-emotion-cache-1104ytp h2 {{
+            color: {MegafonColors.brandGreen};
+            # font-size: 2.0rem;
+            # padding: 1rem 0px;
+        }}
+        .st-emotion-cache-1104ytp h3 {{
+            color: {MegafonColors.brandPurple};
+            # font-size: 1.5rem;
+            # padding: 0.5rem 0px 1rem;
+        }}
+        # .st-emotion-cache-1104ytp h4 {{
+        #     font-size: 1.5rem;
+        #     padding: 0.5rem 0px 1rem;
+        # }}
+        # .st-emotion-cache-1104ytp p {{
+        #     word-break: break-word;
+        #     margin-top: 0px;
+        #     margin-left: 0px;
+        #     margin-right: 0px;
+        # }}
+        # dataframe {{
+        #     font-size: 16px;
+        # }}
+        # Code
+    </style>
+    """)
+
 
 def wrap_text(text, length=50):
     """

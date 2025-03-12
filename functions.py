@@ -4,11 +4,10 @@ from scipy import stats
 import plotly.express as px
 from plotly.subplots import make_subplots
 from auxiliary import MegafonColors
-import streamlit as st
 
 
 def trimean_mod(data, axis=0):
-    '''
+    """
     Calculates the weighted average of the median, 10th and 90th percentiles in the ratio 8:1:1 along the specified axis.
 
         Parameters:
@@ -17,18 +16,18 @@ def trimean_mod(data, axis=0):
             The data set for witch trimmer is calculated.
 
         axis : {0, 1, 'index', 'columns'}, default - 0
-            If equals to 0 or 'index' then the value is calculating along the rows, 
+            If equals to 0 or 'index' then the value is calculating along the rows,
             If equals to 1 or 'columns' then the value is calculating along the columns.
-            Applicatable only if data is pandas.DataFrame or numpy.array
+            Applicable only if data is pandas.DataFrame or numpy.array
 
         Returns:
         -----------------------
             Float value if data is это pandas.Series
-            Pandas.Series object if data is pandas.DataFrame. The indices are совпадают с индексами data 
-                по противоложной выбранной оси
-            Numpy.ndarray object if data is numpy.ndarray. 
+            Pandas.Series object if data is pandas.DataFrame. The indices are совпадают с индексами data
+                по противоположной выбранной оси
+            Numpy.ndarray object if data is numpy.ndarray.
 
-    '''
+    """
     if type(data) == pd.Series:
         p10 = data.quantile(0.1)
         p50 = data.median()
@@ -564,10 +563,10 @@ def display_cat_info(data):
     df = df.map(lambda x: x if x > 0 else '-')
     s = df.style.set_table_styles([
         {'selector': 'th:not(.index_name)',
-         'props': f'font-size: 20px; font-weight: normal; color: white; background-color: {MegafonColors.brandPurple80};'},
-        {'selector': 'th.col_heading', 'props': 'text-align: center; width: 100px;'},
-        {'selector': 'td', 'props': 'text-align: center; font-size: 20px; font-weight: normal;'},
-        {'selector': 'th.index_name', 'props': 'border-style: none'}
+         'props': f'font-size: 1rem; font-weight: normal; color: white; background-color: {MegafonColors.brandPurple80};'},
+        {'selector': 'th.col_heading', 'props': 'text-align: center; width: 6.75rem;'},
+        {'selector': 'td', 'props': 'text-align: center; font-size: 1rem; font-weight: normal;'},
+        {'selector': 'th.index_name', 'props': 'border-style: hidden'}
     ],
        overwrite=False
     )
@@ -730,7 +729,7 @@ def display_pvalues(data, axis=0, metrics=None, precision=4, alpha=0.05, caption
         .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=0) \
         .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=1) \
         .format(precision=precision) \
-        .highlight_between(right=alpha, inclusive='right', props='color: red; font-weight: bold')
+        .highlight_between(right=alpha, inclusive='right', props='color: red;')
 
     if df.axes[axis].size == 1:
         style = style.hide(axis='index')
@@ -844,10 +843,10 @@ def display_confidence_interval(values, axis=0, metrics=None, precision=1, capti
                             opacity: {opacity}''', axis=axis) \
         .set_caption(caption) \
         .set_table_styles([
-        {'selector': 'caption', 'props': f'font-size:{caption_font_size}pt; text-align:center; color:black'},
+        {'selector': 'caption', 'props': f'font-size:{caption_font_size}pt; text-align:center;'},
         {'selector': 'td', 'props': 'text-align: center; border: 1px solid lightgray; border-collapse: collapse;'},
         {'selector': '.row_heading, td', 'props': f'width: {index_width}px; text-align: center;'},
-        {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center;'}
+        {'selector': '.col_heading, td', 'props': f'width: {col_width}px; text-align: center;'},
     ], overwrite=False) \
         .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=0) \
         .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=1) \
@@ -855,9 +854,9 @@ def display_confidence_interval(values, axis=0, metrics=None, precision=1, capti
 
     for positive_subset in positive_subsets:
         style = style \
-            .highlight_min(props=f'color: red; font-weight: bold;',
+            .highlight_min(props=f'color: red;',
                            subset=positive_subset, axis=axis) \
-            .highlight_max(props=f'color: green; font-weight: bold;',
+            .highlight_max(props=f'color: green;',
                            subset=positive_subset, axis=axis)
 
     for negative_subset in negative_subsets:
@@ -874,7 +873,7 @@ def display_confidence_interval(values, axis=0, metrics=None, precision=1, capti
 
 def display_confidence_interval_overlapping(values, axis=0, metrics=None, caption='', caption_font_size=12,
                                             opacity=1.0, index_width=120, col_width=130):
-    df = values.applymap(lambda x: 'Да' if x == 1 else 'Нет')
+    df = values.applymap(lambda x: 'Yes' if x == 1 else 'No')
     if axis == 0:
         df.index = pd.MultiIndex.from_tuples(df.index.str.split(', ').map(lambda x: tuple(x)), name=[None, None])
         df.columns = pd.Index(metrics['name'].to_list(), name=None)
@@ -899,7 +898,7 @@ def display_confidence_interval_overlapping(values, axis=0, metrics=None, captio
     ], overwrite=False) \
         .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=0) \
         .map_index(lambda s: 'border: 1px solid lightgray; border-collapse: collapse;', axis=1) \
-        .applymap(lambda x: f'color: red; font-weight: bold;' if x == 'Нет' else None)
+        .applymap(lambda x: f'color: red;' if x == 'No' else None)
 
     if df.axes[axis].size == 1:
         style = style.hide(axis='index')
@@ -1325,7 +1324,7 @@ def plot_group_size_barchart(data, title=None, title_y=None, title_font_size=14,
     if orientation == 'h':
         colors.reverse()
     fig = px.histogram(df, title=title, opacity=opacity, orientation=orientation, height=height, width=width)
-    fig.update_traces(texttemplate="%{x}", hovertemplate='%{y} - %{x:} клиентов',
+    fig.update_traces(texttemplate="%{x}", hovertemplate='%{y} - %{x:} customers',
                       marker_color=colors, showlegend=False)
     fig.update_layout(bargap=0.2, boxgroupgap=0.2,
                       title_font_size=title_font_size,
@@ -1334,4 +1333,4 @@ def plot_group_size_barchart(data, title=None, title_y=None, title_font_size=14,
     fig.update_xaxes(title=xaxis_title, title_font_size=axes_title_font_size, tickfont_size=axes_tickfont_size)
     fig.update_yaxes(title=yaxis_title, title_font_size=axes_title_font_size, tickfont_size=axes_tickfont_size)
     fig.update_annotations(font_size=labels_font_size)
-    fig.show()
+    return fig
