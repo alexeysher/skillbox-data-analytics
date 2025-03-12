@@ -3,7 +3,7 @@ from auxiliary import set_text_style, MegafonColors
 
 st.markdown(
     f'''
-    <p style="color: {MegafonColors.brandPurple}, font-size: 5rem;">
+    <p style="color: {MegafonColors.brandPurple}; font-size: 5rem;">
         <br>Research of MegaFon customer success survey
     </p>
     ''', unsafe_allow_html=True
