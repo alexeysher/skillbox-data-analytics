@@ -121,7 +121,7 @@ def show_metric_impact_legend():
 
 
 @st.cache_resource(show_spinner='Plotting...')
-def plot_metric_histograms(data: pd.DataFrame, metrics: pd.DataFrame):
+def plot_all_metric_histograms(data: pd.DataFrame, metrics: pd.DataFrame):
     fig = plot_metric_histograms(
         data, metrics,
         # title='<b>Плотность распределения вероятностей метрик в наблюдаемой выборке</b>',
@@ -269,7 +269,7 @@ st.markdown(
     '''
 )
 
-fig = plot_metric_histograms(st.session_state.data[st.session_state.metrics.index], st.session_state.metrics)
+fig = plot_all_metric_histograms(st.session_state.data[st.session_state.metrics.index], st.session_state.metrics)
 st.plotly_chart(fig, config={'displayModeBar': False}, use_container_width=True)
 st.markdown(
     '''
