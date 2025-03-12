@@ -7,7 +7,7 @@ st.markdown(
         <br><b>Research of MegaFon customer success survey</b><br>
     </p>
     <p style="color: {MegafonColors.brandGreen}; font-size: 4rem;">
-        <br>Author: <b>Alexey Sherstobitov</b>
+        Author: <b>Alexey Sherstobitov</b>
     </p>
     ''', unsafe_allow_html=True
 )
