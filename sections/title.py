@@ -1,5 +1,5 @@
 import streamlit as st
-from auxiliary import set_text_style, MegafonColors
+from auxiliary import MegafonColors
 
 st.markdown(
     f'''
